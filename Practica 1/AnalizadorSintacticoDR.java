@@ -20,9 +20,9 @@ class AnalizadorSintacticoDR{
         System.out.println(reglas.toString());
     }
 
-    private void nregla(String regla){
+    private void nregla(int regla){
         if(recopilar){
-            reglas.append(regla);
+            reglas.append(" " + regla);
         }
     }
 
@@ -54,7 +54,7 @@ class AnalizadorSintacticoDR{
 
     public void S(){
         if(token.tipo == Token.CLASS){
-            nregla(" 1");
+            nregla(1);
             C();
         }
         else{
@@ -65,7 +65,7 @@ class AnalizadorSintacticoDR{
 
     public void C(){
         if(token.tipo == Token.CLASS){
-            nregla(" 2");
+            nregla(2);
             emparejar(Token.CLASS);
             emparejar(Token.ID);
             emparejar(Token.LLAVEI);
@@ -81,13 +81,13 @@ class AnalizadorSintacticoDR{
 
     public void B(){
         if(token.tipo == Token.PUBLIC){
-            nregla(" 3");
+            nregla(3);
             emparejar(Token.PUBLIC);
             emparejar(Token.DOSP);
             P();
         }
         else if(token.tipo == Token.PRIVATE || token.tipo == Token.LLAVED){
-            nregla(" 4");
+            nregla(4);
         }
         else{
             tokE.add(Token.LLAVED);
@@ -99,13 +99,13 @@ class AnalizadorSintacticoDR{
 
     public void V(){
         if(token.tipo == Token.PRIVATE){
-            nregla(" 5");
+            nregla(5);
             emparejar(Token.PRIVATE);
             emparejar(Token.DOSP);
             P();
         }
         else if(token.tipo == Token.LLAVED){
-            nregla(" 6");
+            nregla(6);
         }
         else{
             tokE.add(Token.LLAVED);
@@ -116,12 +116,12 @@ class AnalizadorSintacticoDR{
 
     public void P(){
         if(token.tipo == Token.INT || token.tipo == Token.FLOAT || token.tipo == Token.CLASS){
-            nregla(" 7");
+            nregla(7);
             D();
             P();
         }
         else if(token.tipo == Token.PRIVATE || token.tipo == Token.LLAVED){
-            nregla(" 8");
+            nregla(8);
         }
         else{
             tokE.add(Token.CLASS);
@@ -135,13 +135,13 @@ class AnalizadorSintacticoDR{
 
     public void D(){
         if(token.tipo == Token.INT || token.tipo == Token.FLOAT){
-            nregla(" 9");
+            nregla(9);
             Tipo();
             emparejar(Token.ID);
             FV();
         }
         else if(token.tipo == Token.CLASS){
-            nregla(" 10");
+            nregla(10);
             C();
         }
         else{
@@ -154,7 +154,7 @@ class AnalizadorSintacticoDR{
 
     public void FV(){
         if(token.tipo == Token.PARI){
-            nregla(" 11");
+            nregla(11);
             emparejar(Token.PARI);
             Tipo();
             emparejar(Token.ID);
@@ -163,7 +163,7 @@ class AnalizadorSintacticoDR{
             Bloque();
         }
         else if(token.tipo == Token.PYC){
-            nregla(" 12");
+            nregla(12);
             emparejar(Token.PYC);
         }
         else{
@@ -175,14 +175,14 @@ class AnalizadorSintacticoDR{
 
     public void L(){
         if(token.tipo == Token.COMA){
-            nregla(" 13");
+            nregla(13);
             emparejar(Token.COMA);
             Tipo();
             emparejar(Token.ID);
             L();
         }
         else if(token.tipo == Token.PARD){
-            nregla(" 14");
+            nregla(14);
         }
         else{
             tokE.add(Token.PARD);
@@ -193,11 +193,11 @@ class AnalizadorSintacticoDR{
 
     public void Tipo(){
         if(token.tipo == Token.INT){
-            nregla(" 15");
+            nregla(15);
             emparejar(Token.INT);
         }
         else if(token.tipo == Token.FLOAT){
-            nregla(" 16");
+            nregla(16);
             emparejar(Token.FLOAT);
         }
         else{
@@ -209,7 +209,7 @@ class AnalizadorSintacticoDR{
 
     public void Bloque(){
         if(token.tipo == Token.LLAVEI){
-            nregla(" 17");
+            nregla(17);
             emparejar(Token.LLAVEI);
             SecInstr();
             emparejar(Token.LLAVED);
@@ -222,13 +222,13 @@ class AnalizadorSintacticoDR{
 
     public void SecInstr(){
         if(token.tipo == Token.INT || token.tipo == Token.FLOAT || token.tipo == Token.ID || token.tipo == Token.LLAVEI || token.tipo == Token.RETURN || token.tipo == Token.IF){
-            nregla(" 18");
+            nregla(18);
             Instr();
             emparejar(Token.PYC);
             SecInstr();
         }
         else if(token.tipo == Token.LLAVED){
-            nregla(" 19");
+            nregla(19);
         }
         else{
             tokE.add(Token.ID);
@@ -244,27 +244,27 @@ class AnalizadorSintacticoDR{
 
     public void Instr(){
         if(token.tipo == Token.INT || token.tipo == Token.FLOAT){
-            nregla(" 20");
+            nregla(20);
             Tipo();
             emparejar(Token.ID);
         }
         else if(token.tipo == Token.ID){
-            nregla(" 21");
+            nregla(21);
             emparejar(Token.ID);
             emparejar(Token.ASIG);
             Expr();
         }
         else if(token.tipo == Token.LLAVEI){
-            nregla(" 22");
+            nregla(22);
             Bloque();
         }
         else if(token.tipo == Token.RETURN){
-            nregla(" 23");
+            nregla(23);
             emparejar(Token.RETURN);
             Expr();
         }
         else if(token.tipo == Token.IF){
-            nregla(" 24");
+            nregla(24);
             emparejar(Token.IF);
             Expr();
             Bloque();
@@ -283,12 +283,12 @@ class AnalizadorSintacticoDR{
 
     public void Ip(){
         if(token.tipo == Token.ELSE){
-            nregla(" 25");
+            nregla(25);
             emparejar(Token.ELSE);
             Bloque();
         }
         else if(token.tipo == Token.PYC){
-            nregla(" 26");
+            nregla(26);
         }
         else{
             tokE.add(Token.PYC);
@@ -298,7 +298,7 @@ class AnalizadorSintacticoDR{
 
     public void Expr(){
         if(token.tipo == Token.NUMREAL || token.tipo == Token.NUMINT || token.tipo == Token.ID || token.tipo == Token.PARI){
-            nregla(" 27");
+            nregla(27);
             Term();
             Exprp();
         }
@@ -313,13 +313,13 @@ class AnalizadorSintacticoDR{
 
     public void Exprp(){
         if(token.tipo == Token.OPAS){
-            nregla(" 28");
+            nregla(28);
             emparejar(Token.OPAS);
             Term();
             Exprp();
         }
         else if(token.tipo == Token.PYC || token.tipo == Token.LLAVEI || token.tipo == Token.PARD){
-            nregla(" 29");
+            nregla(29);
         }
         else{
             tokE.add(Token.LLAVEI);
@@ -332,7 +332,7 @@ class AnalizadorSintacticoDR{
 
     public void Term(){
         if(token.tipo == Token.NUMREAL || token.tipo == Token.NUMINT || token.tipo == Token.ID || token.tipo == Token.PARI){
-            nregla(" 30");
+            nregla(30);
             Factor();
             Termp();
         }
@@ -347,13 +347,13 @@ class AnalizadorSintacticoDR{
 
     public void Termp(){
         if(token.tipo == Token.OPMD){
-            nregla(" 31");
+            nregla(31);
             emparejar(Token.OPMD);
             Factor();
             Termp();
         }
         else if(token.tipo == Token.OPAS || token.tipo == Token.PYC || token.tipo == Token.LLAVEI || token.tipo == Token.PARD){
-            nregla(" 32");
+            nregla(32);
         }
         else{
             tokE.add(Token.LLAVEI);
@@ -367,19 +367,19 @@ class AnalizadorSintacticoDR{
 
     public void Factor(){
         if(token.tipo == Token.NUMREAL){
-            nregla(" 33");
+            nregla(33);
             emparejar(Token.NUMREAL);
         }
         else if(token.tipo == Token.NUMINT){
-            nregla(" 34");
+            nregla(34);
             emparejar(Token.NUMINT);
         }
         else if(token.tipo == Token.ID){
-            nregla(" 35");
+            nregla(35);
             emparejar(Token.ID);
         }
         else if(token.tipo == Token.PARI){
-            nregla(" 36");
+            nregla(36);
             emparejar(Token.PARI);
             Expr();
             emparejar(Token.PARD);
