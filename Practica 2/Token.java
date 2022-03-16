@@ -13,12 +13,12 @@ public class Token {
 	public static final ArrayList<String> nombreToken = new ArrayList<String>();
 
 	static{
-		nombreToken.add("(");
-		nombreToken.add(")");
-		nombreToken.add("+ -");
-		nombreToken.add(";");
-		nombreToken.add(":");
-		nombreToken.add("=");
+		nombreToken.add("("); //0
+		nombreToken.add(")"); //1
+		nombreToken.add("+ -"); //2
+		nombreToken.add(";"); //3
+		nombreToken.add(":"); //4
+		nombreToken.add("="); //
 		nombreToken.add("{");
 		nombreToken.add("}");
 		nombreToken.add("'class'");
@@ -39,17 +39,17 @@ public class Token {
 		OPAS		= 2,
 		PYC		= 3,
 		DOSP		= 4,
-		ASIG		= 6,
-		LLAVEI          = 7,
-		LLAVED          = 8,
-		CLASS		= 9,
-		PUBLIC		= 10,
-		FLOAT		= 11,
-		INT		= 12,
-		NUMINT		= 13,
-		ID		= 14,
-		NUMREAL		= 15,
-		EOF		= 16;
+		ASIG		= 5,
+		LLAVEI          = 6,
+		LLAVED          = 7,
+		CLASS		= 8,
+		PUBLIC		= 9,
+		FLOAT		= 10,
+		INT		= 11,
+		NUMINT		= 12,
+		ID		= 13,
+		NUMREAL		= 14,
+		EOF		= 15;
 
 	public String toString(){
 	        return nombreToken.get(tipo);

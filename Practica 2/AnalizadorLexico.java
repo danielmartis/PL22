@@ -23,7 +23,7 @@ class AnalizadorLexico{
                 leido = archivo.read();
                 bytes++;
             }catch(EOFException e){
-                return 21;
+                return Token.EOF;
             }
             catch(IOException ie){
                 System.exit(-1);
@@ -62,7 +62,7 @@ class AnalizadorLexico{
             /*Comentario para que ocupe más el archivo*/
             b = leerCaracter();
             if(b == -1){
-                t.tipo = 21;
+                t.tipo = Token.EOF;
                 t.columna = col;
                 t.fila = fil;
                 return t;
@@ -89,7 +89,7 @@ class AnalizadorLexico{
             t.fila = fil;
             t.columna = col;
             if(b == -1){
-                t.tipo = 21;
+                t.tipo = Token.EOF;
                 t.columna = col;
                 t.fila = fil;
                 return t;
@@ -99,38 +99,38 @@ class AnalizadorLexico{
                 case 0:
                     if(leido == '{'){
                         t.lexema = "{";
-                        t.tipo = 8;
+                        t.tipo = Token.LLAVEI;
                     }
                     else if(leido == '}'){
                         t.lexema = "}";
-                        t.tipo = 9;
+                        t.tipo = Token.LLAVED;
                     }
                     else if(leido == '('){
                         t.lexema = "(";
-                        t.tipo = 0;
+                        t.tipo = Token.PARI;
                     }
                     else if (leido == ')'){
                         t.lexema = ")";
-                        t.tipo = 1;
+                        t.tipo = Token.PARD;
                     }
                     else if(leido == ':'){
                         t.lexema = ":";
-                        t.tipo = 5;
+                        t.tipo = Token.DOSP;
                     }
                     else if(leido == '='){
                         t.lexema = "=";
-                        t.tipo = 7;
+                        t.tipo = Token.ASIG;
                     }
                     else if(leido == ';'){
                         t.lexema = ";";
-                        t.tipo = 4;
+                        t.tipo = Token.PYC;
                     }
                     else if(leido == '+' || leido == '-'){
                         if(leido == '+')
                             t.lexema = "+";
                         else
                             t.lexema = "-";
-                        t.tipo = 3;
+                        t.tipo = Token.OPAS;
                     }
                     else if(esLetra(leido)){
                         estado = 12;
@@ -166,7 +166,7 @@ class AnalizadorLexico{
                                 System.exit(-1);
                             }
                             t.lexema = tok.toString();
-                            t.tipo = 18;
+                            t.tipo = Token.NUMINT;
                         }
                     }
                 case 3:
@@ -182,7 +182,7 @@ class AnalizadorLexico{
                             }while(esNumero(leido));
                             bytes--;
                             t.lexema = tok.toString();
-                            t.tipo = 20;
+                            t.tipo = Token.NUMREAL;
                             try{
                                 archivo.seek(bytes);
                             }catch(Exception e){
@@ -200,7 +200,7 @@ class AnalizadorLexico{
                                 System.exit(-1);
                             }
                             t.lexema = tok.toString();
-                            t.tipo = 18;
+                            t.tipo = Token.NUMINT;
                         }
                     }
                 case 7:
@@ -258,20 +258,20 @@ class AnalizadorLexico{
                             System.exit(-1);
                         }
                         if(t.lexema.equals("class")){
-                            t.tipo = 10;
+                            t.tipo = Token.CLASS;
                         }
                         else if(t.lexema.equals("public")){
-                            t.tipo = 11;
+                            t.tipo = Token.PUBLIC;
                         }
                         else if(t.lexema.equals("int")){
-                            t.tipo = 14;
+                            t.tipo = Token.INT;
                         }
                         else if(t.lexema.equals("float")){
-                            t.tipo = 13;
+                            t.tipo = Token.FLOAT;
                         }
 
                         else{
-                            t.tipo = 19;
+                            t.tipo = Token.ID;
                         }
                     }
             }
