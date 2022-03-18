@@ -129,12 +129,20 @@ class AnalizadorSintacticoSLR{
                     actEst(4);
                     emparejar(Token.ID);
                 }
+                else{
+                	tk.add(Token.ID);
+                	errorSintaxis(tk);
+                }
             }
-            //Comentario para poner datos
+
             else if (estado == 4){
                 if(t.tipo == Token.LLAVEI){
                     actEst(5);
                     emparejar(Token.LLAVEI);
+                }
+                else{
+                	tk.add(Token.LLAVEI);
+                	errorSintaxis(tk);
                 }
             }
             else if (estado == 5){
@@ -148,7 +156,7 @@ class AnalizadorSintacticoSLR{
                 }
                 else if(t.tipo == Token.LLAVED){
                     ira= simb[2];
-                    //reglas.add("4");
+                    reglas.add("4");
                 }
                 else{
                     tk.add(Token.LLAVED);
@@ -238,7 +246,7 @@ class AnalizadorSintacticoSLR{
                 if(t.tipo == Token.LLAVED){
                     popEst(3);
                     estado = estados.peek();
-                    ira= simb[3];
+                    ira= simb[2];
                     reglas.add("3");
                 }
                 else{
@@ -341,7 +349,7 @@ class AnalizadorSintacticoSLR{
                 if(t.tipo == Token.LLAVED){
                     popEst(2);
                     estado = estados.peek();
-                    ira= simb[2];
+                    ira= simb[3];
                     reglas.add("5");
                 }
                 else{
@@ -488,7 +496,7 @@ class AnalizadorSintacticoSLR{
                     ira= simb[8];
                     reglas.add("15");
                 }
-                //cOMENTARIO PARA QUE RECOMPILE
+
                 else if(t.tipo == Token.INT){
                     actEst(14);
                     emparejar(Token.INT);
@@ -606,6 +614,10 @@ class AnalizadorSintacticoSLR{
                     ira= simb[9];
                     reglas.add("16");
                 }
+                else{
+                	tk.add(Token.PYC);
+                	errorSintaxis(tk);
+                }
             }
             else if (estado == 33){
                 if(ira== simb[10]){
@@ -705,7 +717,7 @@ class AnalizadorSintacticoSLR{
             }
             else if (estado == 39){
                 if(t.tipo == Token.PYC){
-                    popEst(3);
+                    popEst(1);
                     estado = estados.peek();
                     ira= simb[11];
                     reglas.add("22");
@@ -752,7 +764,7 @@ class AnalizadorSintacticoSLR{
                     ira= simb[10];
                     reglas.add("18");
                 }
-                else {
+                else{
                     tk.add(Token.OPAS);
                     tk.add(Token.PYC);
                     errorSintaxis(tk);
