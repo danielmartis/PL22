@@ -1,0 +1,24 @@
+global Main{
+attrPub:entero
+attrPubFl:real
+iPriv:entero
+fPriv:real
+}
+fun Main_constr(a:entero;b:real):entero
+{
+Main.attrPub := a;
+
+Main.attrPubFl := b;
+
+}
+fun Main_metodo(a:entero;b:entero):entero
+{
+ret (a +i b) /i Main.attrPub;
+
+}
+fun private_Main_mpriv(p:entero):real
+{
+ret itor(1 +i 2) -r itor(3 *i 4 /i 5) *r (itor(Main.attrPub +i Main.iPriv) -r Main.fPriv);
+
+}
+

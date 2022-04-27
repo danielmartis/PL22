@@ -1,0 +1,19 @@
+
+global Main{
+ atrL1:entero
+ }
+  global Main_L2{
+atrL2:real
+  }
+  global Main_L2_L3{
+atrL3:entero
+  }
+ global Main_L2_L3_L4{
+ atrL4:entero
+ }
+  fun private_Main_L2_L3_L4_mL4(a:entero):real
+{
+ret itor(a+i Main.atrL1)+r Main_L2.atrL2+r itor(Main_L2_L3.atrL3)+r itor(Main_L2_L3_L4.atrL4);
+ 
+}
+     

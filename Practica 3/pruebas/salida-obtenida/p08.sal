@@ -1,0 +1,7 @@
+
+fun A_a(a:real):entero
+{
+a:= itor(2);
+ 
+}
+  

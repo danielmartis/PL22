@@ -1,0 +1,32 @@
+global A{
+attr:entero
+atfl:real
+}
+fun A_ff1(r:real):real
+{
+var i:entero;
+i := 2 *i 3;
+if (i)
+{
+var r:entero;
+r := 35 /i 7;
+i := i -i r +i 4 *i A.attr;
+}
+ret itor(i) +r r;
+}
+global A_B{
+atint:entero
+attr:real
+}
+fun private_A_B_ff2(a:entero;b:entero):entero
+{
+ret a +i b *i b;
+}
+fun private_A_B_C_ffc(d:entero):entero
+{
+ret 1 +i d;
+}
+fun private_A_B_f2(r:real;s:real;t:real):real
+{
+ret r +r s +r t +r A.atfl -r itor(A_B.atint);
+}
