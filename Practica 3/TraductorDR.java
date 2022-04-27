@@ -19,6 +19,9 @@ class TraductorDR{
 
     }
 
+
+    String vacio =  " ";
+
     public AnalizadorLexico al;
     
     public StringBuilder reglas;
@@ -47,7 +50,7 @@ class TraductorDR{
         recopilar = false;
         reglas = new StringBuilder();
         tokE = new ArrayList<Integer>();
-        ambitoActual = "";
+        ambitoActual = " ";
         traduccion = "";
         ts = new TablaSimbolos(null);
     }
@@ -109,12 +112,14 @@ class TraductorDR{
             emparejar(Token.CLASS);
             id = token.lexema;
             s = new Simbolo(id, 3, ambitoActual + id);
+
             if(!ts.newSymb(s)){
                 errorSemantico(1, token);
             }
             emparejar(Token.ID);
             emparejar(Token.LLAVEI);
-            if(ambitoActual.equals("")){
+            ts = new TablaSimbolos(ts);
+            if(ambitoActual.equals(vacio)){
                 ambitoActual = id;
                 ambitos.add(id);
             }
@@ -122,18 +127,29 @@ class TraductorDR{
                 ambitoActual = ambitoActual + "_" + id;
                 ambitos.add(ambitoActual);
             }
-
             bs = B(acce);
             vs = V(acce);
             emparejar(Token.LLAVED);
-            ambitoActual = ambitos.pop();
-
-            if(!bs.atrib.equals("") || ! vs.atrib.equals("")){
-                return "global " + ambitoActual + "{\n" + bs.atrib + vs.atrib + "}\n" + bs.trad + vs.trad;  
+            ts = ts.getPadre();
+            
+            
+            if(!bs.atrib.equals(vacio) || ! vs.atrib.equals(vacio)){
+                String tr =  "global " + ambitoActual + "{\n" + bs.atrib + vs.atrib + "}\n" + bs.trad + vs.trad;  
+                ambitoActual = ambitos.pop();
+                if(!ambitos.empty()){
+                    ambitoActual = ambitos.peek();
+                }
+                return tr;
             }
             else{
-                return bs.trad + vs.trad;
-            } 
+                String tr =  bs.trad + vs.trad;
+
+                ambitoActual = ambitos.pop();
+                if(!ambitos.empty()){
+                    ambitoActual = ambitos.peek();
+                }
+                return tr;            } 
+
         }
         else{
             tokE.add(Token.CLASS);
@@ -158,7 +174,7 @@ class TraductorDR{
         }
         else if(token.tipo == Token.PRIVATE || token.tipo == Token.LLAVED){
             nregla(4);
-            return new Atributos("", "");
+            return new Atributos(vacio, vacio);
         }
         else{
             tokE.add(Token.LLAVED);
@@ -180,7 +196,7 @@ class TraductorDR{
         }
         else if(token.tipo == Token.LLAVED){
             nregla(6);
-            return new Atributos("","");
+            return new Atributos(vacio,vacio);
         }
         else{
             tokE.add(Token.LLAVED);
@@ -197,11 +213,14 @@ class TraductorDR{
             nregla(7);
             ds = D(acce);
             ps = P(acce);
+            if(ds.atrib.equals(vacio) && ps.atrib.equals(vacio)){
+                return new Atributos(ds.trad + ps.trad, vacio);
+            }
             return new Atributos(ds.trad + ps.trad, ds.atrib + ps.atrib);
         }
         else if(token.tipo == Token.PRIVATE || token.tipo == Token.LLAVED){
             nregla(8);
-            return new Atributos("","");
+            return new Atributos(vacio,vacio);
         }
         else{
             tokE.add(Token.CLASS);
@@ -224,12 +243,13 @@ class TraductorDR{
             id = token.lexema;
             
             emparejar(Token.ID);
+            //System.out.println(tipotrad);
             fvs = FV(tipotrad, id, acce);
             if(fvs.acce){
-                return new Atributos("", fvs.trad);
+                return new Atributos(vacio, fvs.trad);
             }
             else{
-                return new Atributos(fvs.trad, "");
+                return new Atributos(fvs.trad, vacio);
             }
             //return fvs;
         }
@@ -237,7 +257,7 @@ class TraductorDR{
             nregla(10);
             String ctrad;
             ctrad = C(acce);
-            return new Atributos(ctrad, "");
+            return new Atributos(ctrad, vacio);
         }
         else{
             tokE.add(Token.CLASS);
@@ -253,7 +273,7 @@ class TraductorDR{
             String tipotrad,ltrad,bloquetrad, id2;
             String trad = "";
             nregla(11);
-            Simbolo s = new Simbolo(id, 3, ambitoActual + "_" + id);
+            Simbolo s = new Simbolo(id, 3, ambitoActual + "." + id);
             if(!ts.newSymb(s)){
                 errorSemantico(1, token);
             }
@@ -261,14 +281,23 @@ class TraductorDR{
             ts = new TablaSimbolos(ts);
             tipotrad = Tipo();
             id2 = token.lexema;
+            if(tipotrad.equals("entero")){
+                s = new Simbolo(id2, 1,  id2);
+            }
+            else{
+                s = new Simbolo(id2,2,id2);
+            }
+            if(!ts.newSymb(s)){
+                errorSemantico(1, token);
+            }
             emparejar(Token.ID);
             ltrad = L();
             emparejar(Token.PARD);
-            bloquetrad = Bloque(tipotrad);
+            bloquetrad = Bloque(tipo);
             if(!acce){
                 trad = "private_";
             }
-            trad = "fun " + trad +  ambitoActual + "_" + id + "(" + id2 + ":" + tipotrad + ltrad +"):" + tipo + bloquetrad;
+            trad = "fun " + trad +  ambitoActual + "_" + id + "(" + id2 + ":" + tipotrad + ltrad +"):" + tipo + "\n" + bloquetrad;
             ts = ts.getPadre();
             return new Atributos(trad, false);
 
@@ -277,12 +306,13 @@ class TraductorDR{
             nregla(12);
             emparejar(Token.PYC);
             Simbolo s;
-            if(tipo == "entero"){
-                s = new Simbolo(id, 0, ambitoActual + "_" + id);
+            if(tipo.equals("entero")){
+                s = new Simbolo(id, 1, ambitoActual + "." + id);
             }
             else{
-                s = new Simbolo(id,1,ambitoActual + "_" + id);
+                s = new Simbolo(id,2,ambitoActual + "." + id);
             }
+            
             if(!ts.newSymb(s)){
                 errorSemantico(1, token);
             }
@@ -304,18 +334,19 @@ class TraductorDR{
             emparejar(Token.COMA);
             tipotrad = Tipo();
             id = token.lexema;
-            if(tipotrad == "entero"){
-                s = new Simbolo(id,0,id);
+            //System.out.println("id:" + id + " tipo:" + tipotrad);
+            if(tipotrad.equals("entero")){
+                s = new Simbolo(id,1,id);
             }
             else{
-                s = new Simbolo(id, 1,id);
+                s = new Simbolo(id, 2,id);
             }
             if(!ts.newSymb(s)){
                 errorSemantico(1, token);
             }
             emparejar(Token.ID);
             ltrad = L();
-            return "," + id + ":" + tipotrad + ltrad;
+            return ";" + id + ":" + tipotrad + ltrad;
         }
         else if(token.tipo == Token.PARD){
             nregla(14);
@@ -351,13 +382,15 @@ class TraductorDR{
     public String Bloque(String tipo){
         if(token.tipo == Token.LLAVEI){
             String sectrad;
+            //System.out.println(tipo);
+
             nregla(17);
             ts = new TablaSimbolos(ts);
             emparejar(Token.LLAVEI);
             sectrad = SecInstr(tipo);
             emparejar(Token.LLAVED);    
             ts = ts.getPadre();
-            return "{\n" + sectrad + "}\n";
+            return "{\n" + sectrad + "\n}\n";
 
         }
         else{
@@ -378,7 +411,7 @@ class TraductorDR{
         }
         else if(token.tipo == Token.LLAVED){
             nregla(19);
-            return "";
+            return vacio;
         }
         else{
             tokE.add(Token.ID);
@@ -400,11 +433,11 @@ class TraductorDR{
             nregla(20);
             tipotrad = Tipo();
             id = token.lexema;
-            if(tipotrad == "entero"){
-                s = new Simbolo(id,0,id);
+            if(tipotrad.equals("entero")){
+                s = new Simbolo(id,1,id);
             }
             else{
-                s = new Simbolo(id, 1,id);
+                s = new Simbolo(id, 2,id);
             }
             if(!ts.newSymb(s)){
                 errorSemantico(1, token);
@@ -418,6 +451,8 @@ class TraductorDR{
             String id;
             Atributos expr;
             Simbolo s;
+            Token token2;
+            token2 = token;
             nregla(21);
             id = token.lexema;
             if(ts.searchSymb(token.lexema) == null){
@@ -426,10 +461,19 @@ class TraductorDR{
             else if((s = ts.searchSymb(token.lexema)).tipo == 3){
                 errorSemantico(3,token);
             }
+            s = ts.searchSymb(token.lexema);
+        
             emparejar(Token.ID);
+            token2 = token;
             emparejar(Token.ASIG);
             expr = Expr();
-            return "";
+            if(expr.atrib.equals("entero") && s.tipo == 2){
+                return s.nomtrad + ":= itor(" + expr.trad + ");\n"; 
+            }
+            else if(expr.atrib.equals("real") && s.tipo == 1){
+                errorSemantico(4,token2);
+            }
+            return s.nomtrad + ":=" + expr.trad + ";\n";
         }
         else if(token.tipo == Token.LLAVEI){
             String bloquetrad;
@@ -439,20 +483,35 @@ class TraductorDR{
         }
         else if(token.tipo == Token.RETURN){
             //Hacer luego.
+            Token token2;
             Atributos expr;
             nregla(23);
+            token2 = token;
             emparejar(Token.RETURN);
             expr = Expr();
+            //System.out.println(tipo + " " + expr.atrib);
+            if(tipo.equals("entero") && expr.atrib.equals("real")){
+                errorSemantico(4,token2);
+            }
+            else if(tipo.equals("real") && expr.atrib.equals("entero")){
+                return "ret itor(" + expr.trad + ");\n"; 
+            }
+            return "ret " + expr.trad + ";\n";
         }
         else if(token.tipo == Token.IF){
             String bloquetrad,iptrad;
             Atributos expr;
+            Token token2;
+            token2 = token;
             nregla(24);
             emparejar(Token.IF);
             expr = Expr();
+            if(expr.atrib.equals("real")){
+                errorSemantico(5,token2);
+            }
             bloquetrad = Bloque(tipo);
             iptrad = Ip(tipo);
-            return "if (" + expr.trad + ")" + bloquetrad + iptrad;
+            return "if (" + expr.trad + ")\n" + bloquetrad + iptrad;
         }
         else{
             tokE.add(Token.ID);
@@ -489,16 +548,9 @@ class TraductorDR{
             Atributos term, exprp;
             nregla(27);
             term = Term();
-            exprp = Exprp(term.atrib);
-            if(exprp.atrib.equals("nada")){
-                return new Atributos(term.trad, term.atrib);
-            }
-            else if(exprp.atrib.equals(term.atrib)){
-                return new Atributos(term.trad + exprp.trad, term.atrib);
-            }
-            else{
-                return new Atributos(term.trad + exprp.trad, "real");
-            }
+            //System.out.println(term.atrib);
+            exprp = Exprp(term.trad, term.atrib);
+            return exprp;
         }
         else{
             tokE.add(Token.ID);
@@ -511,7 +563,7 @@ class TraductorDR{
 
     }
 
-    public Atributos Exprp(String t){
+    public Atributos Exprp(String tr, String t){
         if(token.tipo == Token.OPAS){
             Atributos term, exprp;
             String si;
@@ -519,11 +571,29 @@ class TraductorDR{
             si = token.lexema;
             emparejar(Token.OPAS);
             term = Term();
-            exprp = Exprp(term.atrib);
+            if(t.equals(term.atrib)){
+                if(t.equals("entero")){
+                    tr = tr + si + "i " + term.trad;
+                }
+                else{
+                    tr = tr + si + "r " + term.trad;
+                }
+            }
+            else{
+                if(t.equals("entero")){
+                    tr = "itor(" + tr + ")" + si + "r " + term.trad;
+                    t = "real";
+                }
+                else{
+                    tr = tr + si + "r " + "itor(" + term.trad + ")";
+                }
+            }
+            exprp = Exprp(tr,t);
+            return exprp;
         }
         else if(token.tipo == Token.PYC || token.tipo == Token.LLAVEI || token.tipo == Token.PARD){
             nregla(29);
-            return new Atributos("", "nada");
+            return new Atributos(tr, t);
         }
         else{
             tokE.add(Token.LLAVEI);
@@ -541,7 +611,9 @@ class TraductorDR{
             Atributos factor, termp;
             nregla(30);
             factor = Factor();
-            termp = Termp(factor.atrib);
+            termp = Termp(factor.trad,factor.atrib);
+            //System.out.println("factor: " + factor.atrib + " termp: " + termp.atrib);
+            return termp;
         }
         else{
             tokE.add(Token.ID);
@@ -554,18 +626,37 @@ class TraductorDR{
 
     }
 
-    public Atributos Termp(String t){
+    public Atributos Termp(String tr, String t){
         if(token.tipo == Token.OPMD){
             Atributos factor, termp;
-            String si = token.lexema;
+            String si;
+            si = token.lexema;
             nregla(31);
             emparejar(Token.OPMD);
             factor = Factor();
-            termp = Termp(factor.atrib);
+            if(t.equals(factor.atrib)){
+                if(t.equals("entero")){
+                    tr = tr + si + "i " + factor.trad;
+                }
+                else{
+                    tr = tr + si + "r " + factor.trad;
+                }
+            }
+            else{
+                if(t.equals("entero")){
+                    tr = "itor(" + tr + ")" + si + "r " + factor.trad;
+                    t = "real";
+                }
+                else{
+                    tr = tr + si + "r " + "itor(" + factor.trad + ")";
+                }
+            }
+            termp = Termp(tr,t);
+            return termp;
         }
         else if(token.tipo == Token.OPAS || token.tipo == Token.PYC || token.tipo == Token.LLAVEI || token.tipo == Token.PARD){
             nregla(32);
-            return new Atributos("","nada");
+            return new Atributos(tr,t);
         }
         else{
             tokE.add(Token.LLAVEI);
@@ -604,12 +695,18 @@ class TraductorDR{
             else if((s = ts.searchSymb(token.lexema)).tipo == 3){
                 errorSemantico(3,token);
             }
+            
             else if(s.tipo == 1){
-                id = new Atributos(token.lexema,"entero");
+                id = new Atributos(s.nomtrad, "entero");
+                //System.out.println(s.nombre + " " + s.tipo);
             }
             else{
-                id = new Atributos(token.lexema,"real");
+                id = new Atributos(s.nomtrad,"real");
+                //System.out.println(s.nombre + " " + s.tipo);
+
             }
+            
+
             nregla(35);
             emparejar(Token.ID);
             return id;
