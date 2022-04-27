@@ -78,8 +78,8 @@ FV  : pari L pard Bloque {}
 L   : Tipo id coma L {}
     | Tipo id {}
 ;
-Tipo    : tkint { $$.cod = "entero"; $$.tipo = 1;}
-        | tkfloat { $$.cod = "real"; $$.tipo = 2;}
+Tipo    : tkint { $$.cod = "entero"; $$.tipo = ENTERO;}
+        | tkfloat { $$.cod = "real"; $$.tipo = REAL;}
 ;
 Bloque  : llavei SecInstr llaved{$$.cod = "\n{\n" + $2.cod + "\n}\n";  }
 ;
@@ -101,8 +101,8 @@ Expr    : Expr opas Term {}
 Term    : Term opmd Factor {}
         | Factor {}
 ;
-Factor  : numentero {$$.cod = $1.lexema; $$.tipo = 1;}
-        | numreal {$$.cod = $1.lexema; $$.tipo = 2;}
+Factor  : numentero {$$.cod = $1.lexema; $$.tipo = ENTERO;}
+        | numreal {$$.cod = $1.lexema; $$.tipo = REAL;}
         | id {}
         | pari Expr pard {$$.cod = "(" + $2.cod + ")"; $$.tipo = $2.tipo;}
 ;
