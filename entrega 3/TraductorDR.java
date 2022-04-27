@@ -112,11 +112,13 @@ class TraductorDR{
             emparejar(Token.CLASS);
             id = token.lexema;
             s = new Simbolo(id, 3, ambitoActual + id);
+
             if(!ts.newSymb(s)){
                 errorSemantico(1, token);
             }
             emparejar(Token.ID);
             emparejar(Token.LLAVEI);
+            ts = new TablaSimbolos(ts);
             if(ambitoActual.equals(vacio)){
                 ambitoActual = id;
                 ambitos.add(id);
@@ -125,18 +127,29 @@ class TraductorDR{
                 ambitoActual = ambitoActual + "_" + id;
                 ambitos.add(ambitoActual);
             }
-
             bs = B(acce);
             vs = V(acce);
             emparejar(Token.LLAVED);
-            ambitoActual = ambitos.pop();
-
+            ts = ts.getPadre();
+            
+            
             if(!bs.atrib.equals(vacio) || ! vs.atrib.equals(vacio)){
-                return "global " + ambitoActual + "{\n" + bs.atrib + vs.atrib + "}\n" + bs.trad + vs.trad;  
+                String tr =  "global " + ambitoActual + "{\n" + bs.atrib + vs.atrib + "}\n" + bs.trad + vs.trad;  
+                ambitoActual = ambitos.pop();
+                if(!ambitos.empty()){
+                    ambitoActual = ambitos.peek();
+                }
+                return tr;
             }
             else{
-                return bs.trad + vs.trad;
-            } 
+                String tr =  bs.trad + vs.trad;
+
+                ambitoActual = ambitos.pop();
+                if(!ambitos.empty()){
+                    ambitoActual = ambitos.peek();
+                }
+                return tr;            } 
+
         }
         else{
             tokE.add(Token.CLASS);
@@ -200,6 +213,9 @@ class TraductorDR{
             nregla(7);
             ds = D(acce);
             ps = P(acce);
+            if(ds.atrib.equals(vacio) && ps.atrib.equals(vacio)){
+                return new Atributos(ds.trad + ps.trad, vacio);
+            }
             return new Atributos(ds.trad + ps.trad, ds.atrib + ps.atrib);
         }
         else if(token.tipo == Token.PRIVATE || token.tipo == Token.LLAVED){
@@ -296,6 +312,7 @@ class TraductorDR{
             else{
                 s = new Simbolo(id,2,ambitoActual + "." + id);
             }
+            
             if(!ts.newSymb(s)){
                 errorSemantico(1, token);
             }
