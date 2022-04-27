@@ -1,0 +1,17 @@
+class Main {
+
+  public:
+
+    int id;
+
+    int metodo(int a, int b) {
+      
+      float a;  /* correcto, se abre ámbito con la llave */
+
+      int b;
+      int c;
+      int a;    /* Error semantico (13,11): 'a' ya existe en este ambito */
+
+    }
+
+}

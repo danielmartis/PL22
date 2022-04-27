@@ -1,0 +1,36 @@
+class A {
+public:
+int attr;
+float ff1(float r) {
+int i;
+i = 2*3;
+if i
+{
+int r;
+r = 35/7;
+i = i - r + 4 * attr;
+};
+return i+r;
+}
+private:
+float atfl;
+class B {
+public:
+int ff2(int a,int b) {
+return a+b*b;
+}
+class C {
+public:
+int ffc(int d) {
+return 1+d;
+}
+}
+private:
+int atint;
+float f2 (float r,float s,float t) {
+return r+s+t+atfl-atint;
+}
+float attr;
+class D {}
+}
+}

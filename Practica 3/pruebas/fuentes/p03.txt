@@ -1,0 +1,24 @@
+class Main {
+
+  public:
+
+    int id;
+
+    int metodo(int a, int b) {
+      
+      float a;  /* correcto, se abre ámbito con la llave */
+
+      int b;
+
+      {
+        int c;
+        int a;    /* correcto, está en otro ámbito */
+
+        a = 75*23;
+        c = a/25;
+      };
+
+      c = a/23;  /* Error semantico (21,7): 'c' no ha sido declarado */
+    }
+
+}

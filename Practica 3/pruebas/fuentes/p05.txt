@@ -1,0 +1,27 @@
+class Main {
+
+   public:
+
+      int attrPub;
+      float attrPubFl;
+
+      int constr(int a,float b) {
+         attrPub = a;
+         attrPubFl = b;
+      }
+
+      int metodo(int a,int b) {
+          return (a+b)/attrPub;
+      }
+
+   private:
+
+      int iPriv;
+      float fPriv;
+
+
+      float mpriv(int p) {
+        return 1+2-3*4/5*(attrPub+iPriv-fPriv);
+      }
+}
+

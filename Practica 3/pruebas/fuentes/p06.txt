@@ -1,0 +1,31 @@
+
+class Main {
+
+   private:
+
+     int atrL1;
+
+     class L2 {
+
+       public:
+         float atrL2;
+
+       private:
+
+         class L3 {
+
+           public:
+              int atrL3;
+
+              class L4 {
+
+               private:
+                 int atrL4;
+
+                 float mL4(int a) {
+                   return a+atrL1+atrL2+atrL3+atrL4;
+                 }
+              }
+         }
+     }
+}

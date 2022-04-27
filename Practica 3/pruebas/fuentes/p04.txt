@@ -1,0 +1,16 @@
+class Main {
+
+  private:
+
+    float epsilon;
+
+    float diference(float a,float b) {
+
+       return a-b-epsilon;
+    }
+
+    int difs(int a, int b) {
+       return a-b-epsilon;  /* Error semantico (13,8): en 'return', la expresion debe ser de tipo entero y es real */
+    }
+
+}
