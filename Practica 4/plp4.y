@@ -81,16 +81,16 @@ L   : Tipo id coma L {}
 Tipo    : tkint { $$.cod = "entero"; $$.tipo = 1;}
         | tkfloat { $$.cod = "real"; $$.tipo = 2;}
 ;
-Bloque  : llavei SecInstr llaved{}
+Bloque  : llavei SecInstr llaved{$$.cod = "\n{\n" + $2.cod + "\n}\n";  }
 ;
-SecInstr    : Instr pyc SecInstr {}
+SecInstr    : Instr pyc SecInstr {$$.cod = $1.cod + ";" + $3.cod;}
             |
 ;
 Instr   : Tipo id {$$.cod = $1.cod + $2.lexema;}
         | id asig Expr {}
-        | Bloque {}
-        | tkreturn Expr {}
-        | tkif Expr Bloque Ip {}
+        | Bloque {$$.cod = $1.cod;}
+        | tkreturn Expr {$1.cod = "ret" + $2.cod;}
+        | tkif Expr Bloque Ip {$$.cod = "if(" + $2.cod + ")" + $3.cod + $4.cod;}
 ;
 Ip  : tkelse Bloque {}
     |
@@ -101,10 +101,10 @@ Expr    : Expr opas Term {}
 Term    : Term opmd Factor {}
         | Factor {}
 ;
-Factor  : numentero {}
-        | numreal {}
+Factor  : numentero {$$.cod = $1.lexema; $$.tipo = 1;}
+        | numreal {$$.cod = $1.lexema; $$.tipo = 2;}
         | id {}
-        | pari Expr pard {}
+        | pari Expr pard {$$.cod = "(" + $2.cod + ")"; $$.tipo = $2.tipo;}
 ;
 
 
