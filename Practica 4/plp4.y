@@ -41,6 +41,7 @@ const int REAL=2;
 
 string operador, s1, s2;  // string auxiliares
 stringstream ss;
+TablaSimbolos ts(null);
 %}
 %%
 
@@ -103,7 +104,13 @@ Term    : Term opmd Factor {}
 ;
 Factor  : numentero {$$.cod = $1.lexema; $$.tipo = ENTERO;}
         | numreal {$$.cod = $1.lexema; $$.tipo = REAL;}
-        | id {}
+        | id {s = ts.searchSymb($1.lexema);
+          if(s == NULL){
+          	errorSemantico(2, $1.lexema, $1.nlin, $1.ncol);
+          }
+          else{
+          }
+        }
         | pari Expr pard {$$.cod = "(" + $2.cod + ")"; $$.tipo = $2.tipo;}
 ;
 
