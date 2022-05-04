@@ -18,7 +18,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-
+#include "TablaSimbolos.h"
 
 using namespace std;
 
@@ -36,16 +36,13 @@ extern FILE *yyin;
 int yyerror(char *s);
 
 
-const int ENTERO=1;
-const int REAL=2;
-
 string operador, s1, s2;  // string auxiliares
 stringstream ss;
-TablaSimbolos ts(null);
+TablaSimbolos ts(NULL);
 %}
 %%
 
-S   : C {int tk = yylex();
+S   : {  $$.acce = true; $$.ambito = "";} C {int tk = yylex();
          if(tk != 0){
             yyerror("");
          }
@@ -54,63 +51,127 @@ S   : C {int tk = yylex();
             cout << $$.cod;
         }}
 ;
-C   : tkclass id llavei B V llaved {
+
+C   : tkclass id {
+                  if(ts.searchSymb($2.lexema) == NULL) /*añadir error*/; 
+                  else{
+                        Simbolo s;
+                        ts.newSymb(s);
+                    }
+                 }
+      llavei {
+                ts = TablaSimbolos(ts); $$.acce = $0.acce; $$.ambito = $0.ambito;
+             } 
+      B {
+            $$.acce = false; $$.ambito = $0.ambito;
+        } 
+      V llaved {
+        ts = ts.getPadre();
         ss.str("");
-        ss << "class " << $2.lexema << "{}";
+        ss << "class " << $2.lexema << "{" << $6.cod + $8.cod << "}";
         $$.cod = ss.str();
         ss.str("");
+      }
+;
+
+B   : tkpublic dosp {$$.ambito = $0.ambito; $$.acce = $0.acce;} P { 
+        $$.cod = $4.cod; $$.atrib = $4.atrib;
+      }
+    |
+;
+
+V   : tkprivate dosp {$$.ambito = $0.ambito; $$.acce = false;} P { 
+        $$.cod = $4.cod; $$.atrib = $4.atrib;
     }
-;
-B   : tkpublic dosp P {}
     |
 ;
-V   : tkprivate dosp P {}
+
+P   : {$$.ambito = $0.ambito; $$.acce = $0.acce;} D {$$.ambito = $0.ambito; $$.acce = $0.acce;} P {}
+
     |
 ;
-P   : D P {}
-    |
+
+D   : Tipo id {if(ts.searchSymb($2.lexema) == NULL) /*añadir error*/; $$.tipo = $1.tipo; } 
+      FV {}
+
+    | {$$.ambito = $0.ambito; $$.acce = $0.acce;} C {}
 ;
-D   : Tipo id FV {}
-    | C {}
-;
+
 FV  : pari L pard Bloque {}
-    | pyc {}
+
+    | pyc {$$.cod = ";";}
 ;
-L   : Tipo id coma L {}
-    | Tipo id {}
+
+L   : Tipo id coma L {
+                      ss.str(""); 
+                      ss << $2.lexema << ": " << $1.cod << "; " << $4.cod; 
+                      $$.cod = ss.str(); 
+                      ss.str("");
+                     }
+                    
+    | Tipo id { 
+                ss.str("");
+                ss << $2.lexema << ":" << $1.cod;
+                $$.cod = ss.str();
+                ss.str("");
+              }
 ;
-Tipo    : tkint { $$.cod = "entero"; $$.tipo = ENTERO;}
+Tipo    : tkint   { $$.cod = "entero"; $$.tipo = ENTERO;}
+
         | tkfloat { $$.cod = "real"; $$.tipo = REAL;}
 ;
-Bloque  : llavei SecInstr llaved{$$.cod = "\n{\n" + $2.cod + "\n}\n";  }
+
+Bloque  : llavei SecInstr llaved {$$.cod = "\n{\n" + $2.cod + "\n}\n";  }
 ;
+
 SecInstr    : Instr pyc SecInstr {$$.cod = $1.cod + ";" + $3.cod;}
             |
 ;
+
 Instr   : Tipo id {$$.cod = $1.cod + $2.lexema;}
-        | id asig Expr {}
+
+        | id asig Expr {
+                         ss.str(""); 
+                         //Faltan comprobaciones
+                         ss << $1.lexema << " := " << $3.cod;
+                         ss.str("");
+                       }
+                              
         | Bloque {$$.cod = $1.cod;}
-        | tkreturn Expr {$1.cod = "ret" + $2.cod;}
-        | tkif Expr Bloque Ip {$$.cod = "if(" + $2.cod + ")" + $3.cod + $4.cod;}
+        
+        | tkreturn Expr {//Faltan comprobaciones 
+                         $1.cod = "ret" + $2.cod;}
+                               
+        | tkif Expr Bloque Ip {//Faltan comprobaciones 
+                               $$.cod = "if(" + $2.cod + ")" + $3.cod + $4.cod;}
 ;
+
 Ip  : tkelse Bloque {}
     |
 ;
+
 Expr    : Expr opas Term {}
+
         | Term {}
 ;
+
 Term    : Term opmd Factor {}
+
         | Factor {}
 ;
+
 Factor  : numentero {$$.cod = $1.lexema; $$.tipo = ENTERO;}
+
         | numreal {$$.cod = $1.lexema; $$.tipo = REAL;}
-        | id {s = ts.searchSymb($1.lexema);
+        
+        | id {Simbolo *s = ts.searchSymb($1.lexema);
           if(s == NULL){
-          	errorSemantico(2, $1.lexema, $1.nlin, $1.ncol);
+          	//errorSemantico(2, $1.lexema, $1.nlin, $1.ncol);
           }
           else{
           }
         }
+        
         | pari Expr pard {$$.cod = "(" + $2.cod + ")"; $$.tipo = $2.tipo;}
 ;
 
