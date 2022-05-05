@@ -19,7 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include "TablaSimbolos.h"
-
+#include <stack>
 using namespace std;
 
 #include "comun.h"
@@ -39,10 +39,12 @@ int yyerror(char *s);
 string operador, s1, s2;  // string auxiliares
 stringstream ss;
 TablaSimbolos ts(NULL);
+stack<string> ambitos;
+string ambitoActual = "";
 %}
 %%
 
-S   : {  $$.acce = true; $$.ambito = "";} C {int tk = yylex();
+S   : {$$.acce = true;} C {int tk = yylex();
          if(tk != 0){
             yyerror("");
          }
@@ -53,17 +55,25 @@ S   : {  $$.acce = true; $$.ambito = "";} C {int tk = yylex();
 ;
 
 C   : tkclass id {
-                  if(ts.searchSymb($2.lexema) == NULL) /*añadir error*/; 
+                  if(ambitos.empty()){
+                     ambitoActual = $2.lexema;
+                     ambitos.push(ambitoActual);
+                  }         
+                  else{
+                     ambitoActual = ambitoActual + "_" + $2.lexema;
+                     ambitos.push(ambitoActual);
+                  }
+                  if(ts.searchSymb($2.lexema) != NULL) /*añadir error*/; 
                   else{
                         Simbolo s;
                         ts.newSymb(s);
                     }
                  }
       llavei {
-                ts = TablaSimbolos(ts); $$.acce = $0.acce; $$.ambito = $0.ambito;
+                ts = TablaSimbolos(ts); $$.acce = $0.acce; 
              } 
       B {
-            $$.acce = false; $$.ambito = $0.ambito;
+            $$.acce = false;
         } 
       V llaved {
         ts = ts.getPadre();
@@ -74,19 +84,19 @@ C   : tkclass id {
       }
 ;
 
-B   : tkpublic dosp {$$.ambito = $0.ambito; $$.acce = $0.acce;} P { 
+B   : tkpublic dosp {$$.acce = $0.acce;} P { 
         $$.cod = $4.cod; $$.atrib = $4.atrib;
       }
     |
 ;
 
-V   : tkprivate dosp {$$.ambito = $0.ambito; $$.acce = false;} P { 
+V   : tkprivate dosp {$$.acce = false;} P { 
         $$.cod = $4.cod; $$.atrib = $4.atrib;
     }
     |
 ;
 
-P   : {$$.ambito = $0.ambito; $$.acce = $0.acce;} D {$$.ambito = $0.ambito; $$.acce = $0.acce;} P {}
+P   : {$$.acce = $0.acce;} D {$$.acce = $0.acce;} P {}
 
     |
 ;
@@ -94,7 +104,7 @@ P   : {$$.ambito = $0.ambito; $$.acce = $0.acce;} D {$$.ambito = $0.ambito; $$.a
 D   : Tipo id {if(ts.searchSymb($2.lexema) == NULL) /*añadir error*/; $$.tipo = $1.tipo; } 
       FV {}
 
-    | {$$.ambito = $0.ambito; $$.acce = $0.acce;} C {}
+    | {$$.acce = $0.acce;} C {}
 ;
 
 FV  : pari L pard Bloque {}
