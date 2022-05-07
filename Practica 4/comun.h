@@ -8,8 +8,8 @@ typedef struct {
    int tipo;
    string cod;
    bool acce;
-   string ambito;
    string atrib;
+   string nombre;
 } MITIPO;
 
 #define YYSTYPE MITIPO

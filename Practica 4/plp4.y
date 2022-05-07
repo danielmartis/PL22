@@ -34,167 +34,8 @@ extern FILE *yyin;
 
 
 int yyerror(char *s);
-
-
-string operador, s1, s2;  // string auxiliares
-stringstream ss;
-TablaSimbolos ts(NULL);
-stack<string> ambitos;
-string ambitoActual = "";
-%}
-%%
-
-S   : {$$.acce = true;} C {int tk = yylex();
-         if(tk != 0){
-            yyerror("");
-         }
-         else{
-            $$.cod = $1.cod;
-            cout << $$.cod;
-        }}
-;
-
-C   : tkclass id {
-                  if(ambitos.empty()){
-                     ambitoActual = $2.lexema;
-                     ambitos.push(ambitoActual);
-                  }         
-                  else{
-                     ambitoActual = ambitoActual + "_" + $2.lexema;
-                     ambitos.push(ambitoActual);
-                  }
-                  if(ts.searchSymb($2.lexema) != NULL) /*añadir error*/; 
-                  else{
-                        Simbolo s;
-                        ts.newSymb(s);
-                    }
-                 }
-      llavei {
-                ts = TablaSimbolos(ts); $$.acce = $0.acce; 
-             } 
-      B {
-            $$.acce = false;
-        } 
-      V llaved {
-        ts = ts.getPadre();
-        ss.str("");
-        ss << "class " << $2.lexema << "{" << $6.cod + $8.cod << "}";
-        $$.cod = ss.str();
-        ss.str("");
-      }
-;
-
-B   : tkpublic dosp {$$.acce = $0.acce;} P { 
-        $$.cod = $4.cod; $$.atrib = $4.atrib;
-      }
-    |
-;
-
-V   : tkprivate dosp {$$.acce = false;} P { 
-        $$.cod = $4.cod; $$.atrib = $4.atrib;
-    }
-    |
-;
-
-P   : {$$.acce = $0.acce;} D {$$.acce = $0.acce;} P {}
-
-    |
-;
-
-D   : Tipo id {if(ts.searchSymb($2.lexema) == NULL) /*añadir error*/; $$.tipo = $1.tipo; } 
-      FV {}
-
-    | {$$.acce = $0.acce;} C {}
-;
-
-FV  : pari L pard Bloque {}
-
-    | pyc {$$.cod = ";";}
-;
-
-L   : Tipo id coma L {
-                      ss.str(""); 
-                      ss << $2.lexema << ": " << $1.cod << "; " << $4.cod; 
-                      $$.cod = ss.str(); 
-                      ss.str("");
-                     }
-                    
-    | Tipo id { 
-                ss.str("");
-                ss << $2.lexema << ":" << $1.cod;
-                $$.cod = ss.str();
-                ss.str("");
-              }
-;
-Tipo    : tkint   { $$.cod = "entero"; $$.tipo = ENTERO;}
-
-        | tkfloat { $$.cod = "real"; $$.tipo = REAL;}
-;
-
-Bloque  : llavei SecInstr llaved {$$.cod = "\n{\n" + $2.cod + "\n}\n";  }
-;
-
-SecInstr    : Instr pyc SecInstr {$$.cod = $1.cod + ";" + $3.cod;}
-            |
-;
-
-Instr   : Tipo id {$$.cod = $1.cod + $2.lexema;}
-
-        | id asig Expr {
-                         ss.str(""); 
-                         //Faltan comprobaciones
-                         ss << $1.lexema << " := " << $3.cod;
-                         ss.str("");
-                       }
-                              
-        | Bloque {$$.cod = $1.cod;}
-        
-        | tkreturn Expr {//Faltan comprobaciones 
-                         $1.cod = "ret" + $2.cod;}
-                               
-        | tkif Expr Bloque Ip {//Faltan comprobaciones 
-                               $$.cod = "if(" + $2.cod + ")" + $3.cod + $4.cod;}
-;
-
-Ip  : tkelse Bloque {}
-    |
-;
-
-Expr    : Expr opas Term {}
-
-        | Term {}
-;
-
-Term    : Term opmd Factor {}
-
-        | Factor {}
-;
-
-Factor  : numentero {$$.cod = $1.lexema; $$.tipo = ENTERO;}
-
-        | numreal {$$.cod = $1.lexema; $$.tipo = REAL;}
-        
-        | id {Simbolo *s = ts.searchSymb($1.lexema);
-          if(s == NULL){
-          	//errorSemantico(2, $1.lexema, $1.nlin, $1.ncol);
-          }
-          else{
-          }
-        }
-        
-        | pari Expr pard {$$.cod = "(" + $2.cod + ")"; $$.tipo = $2.tipo;}
-;
-
-
-
-
-%%
-
-
-
-//***-------------------- en plp4.y -------------------------------
-/// ---------- Errores semánticos ---------------------------------
 const int ERRYADECL=1,ERRNODECL=2,ERRNOSIMPLE=3,ERRTIPOS=4,ERRNOENTERO=5;
+
 void errorSemantico(int nerror,char *lexema,int fila,int columna)
 {
     fprintf(stderr,"Error semantico (%d,%d): en '%s', ",fila,columna,lexema);
@@ -212,6 +53,347 @@ void errorSemantico(int nerror,char *lexema,int fila,int columna)
     }
     exit(-1);
 }
+
+
+string operador, s1, s2;  // string auxiliares
+stringstream ss;
+TablaSimbolos* ts = new TablaSimbolos(NULL);
+stack<string> ambitos;
+string ambitoActual = "";
+%}
+%%
+
+S   : {$$.acce = true;} C {int tk = yylex();
+         if(tk != 0){
+            yyerror("");
+         }
+         else{
+            $$.cod = $2.cod;
+            cout << $$.cod;
+        }}
+;
+
+C   : tkclass id {
+                  if(ambitos.empty()){
+                     ambitoActual = $2.lexema;
+                     ambitos.push(ambitoActual);
+                  }         
+                  else{
+                     ambitoActual = ambitoActual + "_" + $2.lexema;
+                     ambitos.push(ambitoActual);
+                  }
+                  if(ts->searchSymb($2.lexema) != NULL) /*añadir error*/; 
+                  else{
+                        Simbolo s;
+                        ts->newSymb(s);
+                    }
+                 }
+      llavei {
+                ts = new TablaSimbolos(ts); $$.acce = $0.acce; 
+             } 
+      B {
+            $$.acce = false;
+        } 
+      V llaved {
+        ts = ts->getPadre();
+        ss.str("");
+        if($6.atrib != ""|| $8.atrib != ""){
+           ss << "global " << ambitoActual << "{\n" << $6.atrib << "\n" << $8.atrib << "\n}\n";
+        }
+        ambitos.pop();
+        if(!ambitos.empty()){
+           ambitoActual = ambitos.top();
+        }
+        ss << $6.cod << $8.cod;
+        $$.cod = ss.str();
+        ss.str("");
+        //cout << $$.cod;
+      }
+;
+
+B   : tkpublic dosp {$$.acce = $0.acce;} P { 
+        $$.cod = $4.cod; $$.atrib = $4.atrib;
+      }
+    | {$$.cod = ""; $$.atrib = "";}
+;
+
+V   : tkprivate dosp {$$.acce = false;} P { 
+        $$.cod = $4.cod; $$.atrib = $4.atrib;
+    }
+    | {$$.cod = ""; $$.atrib = "";}
+;
+
+P   : {$$.acce = $0.acce;} D {$$.acce = $0.acce;} P {
+                                                      $$.cod = $2.cod + $4.cod;
+                                                      $$.atrib = $2.atrib + $4.atrib;
+                                                   }
+
+    | {$$.cod = ""; $$.atrib = "";}
+;
+
+D   : Tipo id { $$.tipo = $1.tipo;$$.acce = $0.acce; $$.nombre = $2.lexema;} FV {
+                                                                               if($4.cod == ";"){
+                                                                                    Simbolo s;
+                                                                                    s.nombre = $2.lexema;
+                                                                                    ss.str("");
+                                                                                    ss << ambitoActual << "." << $2.lexema;
+                                                                                    s.nomtrad = ss.str();
+                                                                                    s.tipo = $1.tipo;
+                                                                                    if(!ts->newSymb(s)){
+                                                                                       errorSemantico(ERRYADECL,$2.lexema,$2.nlin,$2.ncol);
+                                                                                    }
+                                                                                    ss.str("");
+                                                                                    s.tipo = $1.tipo;
+                                                                                    ss << $2.lexema << ":" << $1.cod << "\n";
+                                                                                    $$.cod = "";
+                                                                                    $$.atrib = ss.str();
+                                                                                    ss.str("");
+                                                                               }
+                                                                               else{
+                                                                                    $$.cod = $4.cod;
+                                                                                    $$.atrib = "";
+                                                                               }
+                                                                           }
+
+    | {$$.acce = $0.acce;} C { $$.cod = $2.cod; $$.atrib = "";}
+;
+
+FV  : pari {ts = new TablaSimbolos(ts);
+            Simbolo s;
+            s.nombre = $0.nombre;
+            s.tipo = FUNCLAS;
+            ss.str("");
+            ss << ambitoActual << "." << $0.cod;
+            s.nomtrad = ss.str();
+            ss.str("");
+            if(!ts->newSymb(s)){
+               errorSemantico(ERRYADECL,$1.lexema,$1.nlin,$1.ncol);
+            }
+            ts = new TablaSimbolos(ts);
+         } L pard {$$.tipo = $0.tipo;} Bloque {
+                                                ss.str("");
+                                                if(!$0.acce){
+                                                   ss << "fun private_" << ambitoActual << "_" << $0.nombre << "(" << $3.cod << "):";
+                                                }
+                                                else{
+                                                   ss << "fun " << ambitoActual << "_" << $0.nombre << "(" << $3.cod << "):";
+                                                }
+                                                if($0.tipo == ENTERO){
+                                                   ss << "entero";
+                                                }
+                                                else{
+                                                   ss << "real";
+                                                }
+                                                ss << $6.cod << "\n";
+                                                $$.cod = ss.str();
+                                                ss.str("");
+                                                ts = ts->getPadre();
+                                              }
+
+    | pyc {
+            $$.cod = ";";
+            $$.atrib = true;
+         }
+;
+
+L   : Tipo id {   Simbolo s;
+                  s.nombre = s.nomtrad = $2.lexema;
+                  s.tipo = $1.tipo;
+                  if(ts->newSymb(s) == false){
+                     errorSemantico(ERRYADECL,$2.lexema,$2.nlin,$2.ncol);
+                  }
+               }
+               coma L {
+                      ss.str(""); 
+                      ss << $2.lexema << ": " << $1.cod << "; " << $5.cod; 
+                      $$.cod = ss.str(); 
+                      ss.str("");
+                     }
+                    
+    | Tipo id { 
+                ss.str("");
+                ss << $2.lexema << ":" << $1.cod;
+                Simbolo s;
+                s.nombre = s.nomtrad = $2.lexema;
+                s.tipo = $1.tipo;
+                if(ts->newSymb(s) == false){
+                     errorSemantico(ERRYADECL,$2.lexema,$2.nlin,$2.ncol);
+                }
+                $$.cod = ss.str();
+                ss.str("");
+              }
+;
+Tipo    : tkint   { $$.cod = "entero"; $$.tipo = ENTERO;}
+
+        | tkfloat { $$.cod = "real"; $$.tipo = REAL;}
+;
+
+Bloque  : llavei {$$.tipo = $0.tipo; ts = new TablaSimbolos(ts);} SecInstr llaved {ts = ts->getPadre(); $$.cod = "\n{\n" + $3.cod + "\n}";  }
+;
+
+SecInstr    : {$$.tipo = $0.tipo;} Instr pyc {$$.tipo = $0.tipo;} SecInstr {$$.cod = $2.cod + "\n" + $5.cod;}
+            | {$$.cod = "";}
+;
+
+Instr   : Tipo id {
+                   Simbolo s;
+                   s.nombre = s.nomtrad = $2.lexema;
+                   s.tipo = $1.tipo;
+                   if(!ts->newSymb(s)){
+                      errorSemantico(ERRYADECL,$2.lexema,$2.nlin,$2.ncol);
+                   }
+                   ss.str("");
+                   ss << "var " << $2.lexema << ": " << $1.cod << ";";
+                   $$.cod = ss.str();
+                   ss.str("");}
+
+        | id asig Expr { Simbolo *s = ts->searchSymb($1.lexema);
+                         ss.str("");
+                         if(s == NULL){
+                              errorSemantico(ERRNODECL,$1.lexema,$1.nlin,$1.ncol);
+                         }
+                        if(s->tipo == FUNCLAS){
+                           errorSemantico(ERRNOSIMPLE, $1.lexema,$1.nlin,$1.ncol);
+                        }
+                         if(s->tipo == ENTERO && $3.tipo == REAL){
+                            errorSemantico(ERRTIPOS,$2.lexema,$2.nlin,$2.ncol);
+                         }
+                         else if(s->tipo == REAL && $3.tipo == ENTERO){
+                            ss << s->nomtrad << ":= itor(" << $3.cod << ");";
+                         } 
+                         else{
+                           ss << s->nomtrad << " := " << $3.cod << ";";
+                         }
+                         $$.cod = ss.str();
+                         ss.str("");
+                       }
+                              
+        | {$$.tipo = $0.tipo; ts = new TablaSimbolos(ts);} Bloque {ts = ts->getPadre(); $$.cod = $1.cod;}
+        
+        | {$$.tipo = $0.tipo;}tkreturn Expr {
+                                                if($1.tipo == ENTERO && $3.tipo == REAL){
+                                                   errorSemantico(ERRTIPOS,$2.lexema,$2.nlin,$2.ncol);
+                                                }
+                                                else if($1.tipo == REAL && $3.tipo == ENTERO){
+                                                   ss.str("");
+                                                   ss << "ret " << "itor(" << $3.cod << ");";
+                                                   $$.cod = ss.str();
+                                                   ss.str("");
+                                                } 
+                                                else{
+                                                   $$.cod = "ret " + $3.cod + ";";
+                                                }
+                                             }
+                                                
+                               
+        | tkif Expr {$$.tipo = $0.tipo;} Bloque {$$.tipo = $0.tipo;} Ip {
+                                                                           if($2.tipo == REAL){
+                                                                              errorSemantico(ERRNOENTERO,$1.lexema,$1.nlin,$1.ncol);
+                                                                           }
+                                                                           $$.cod = "if (" + $2.cod + ")" + $4.cod + $6.cod;}
+;
+
+Ip  : tkelse {$$.tipo = $0.tipo;} Bloque {$$.cod = "else " + $3.cod;}
+    | {$$.cod = "";}
+;
+
+Expr    : Expr opas Term { if($1.tipo == ENTERO && $3.tipo == REAL){
+                              $$.tipo = REAL;
+                              ss.str("");
+                              ss << "itor(" << $1.cod << ")" << " " << $2.lexema << "r " << $3.cod;
+                              $$.cod = ss.str();
+                              ss.str("");
+                           }
+                           else if($1.tipo == REAL && $3.tipo == ENTERO){
+                              $$.tipo = REAL;
+                              ss.str("");
+                              ss <<$1.cod << " " << $2.lexema << "r " << "itor(" << $3.cod << ")";
+                              $$.cod = ss.str();
+                              ss.str("");
+                           }
+                           else if ($1.tipo == ENTERO){
+                              $$.tipo = $1.tipo;
+                              ss.str("");
+                              ss << $1.cod <<" " << $2.lexema <<"i " << $3.cod;
+                              $$.cod = ss.str();
+                              ss.str("");
+
+                           }
+                           else{
+                              $$.tipo = $1.tipo;
+                              ss.str("");
+                              ss << $1.cod << " " << $2.lexema << "r " << $3.cod;
+                              $$.cod = ss.str();
+                              ss.str("");
+                           }
+}
+
+        | Term {$$.tipo = $1.tipo; $$.cod = $1.cod;}
+;
+
+Term    : Term opmd Factor {if($1.tipo == ENTERO && $3.tipo == REAL){
+                              $$.tipo = REAL;
+                              ss.str("");
+                              ss << "itor(" << $1.cod << ") " << $2.lexema << "r " << $3.cod;
+                              $$.cod = ss.str();
+                              ss.str("");
+                           }
+                           else if($1.tipo == REAL && $3.tipo == ENTERO){
+                              $$.tipo = REAL;
+                              ss.str("");
+                              ss << $1.cod << " " << $2.lexema << "r " << " itor(" << $3.cod << ")";
+                              $$.cod = ss.str();
+                              ss.str("");
+                           }
+                           else if ($1.tipo == ENTERO){
+                              $$.tipo = $1.tipo;
+                              ss.str("");
+                              ss<< $1.cod << " " << $2.lexema << "i " <<  $3.cod;
+                              $$.cod = ss.str();
+                              ss.str("");
+                           }
+                           else{
+                              $$.tipo = $1.tipo;
+                              ss.str("");
+                              ss << $1.cod << " " << $2.lexema << "r " << $3.cod;
+                              $$.cod = ss.str();
+                              ss.str("");
+                           }
+                           }
+
+
+        | Factor {$$.tipo = $1.tipo; $$.cod = $1.cod;}
+;
+
+Factor  : numentero {$$.cod = $1.lexema; $$.tipo = ENTERO;}
+
+        | numreal {$$.cod = $1.lexema; $$.tipo = REAL;}
+        
+        | id {Simbolo *s = ts->searchSymb($1.lexema);
+          if(s == NULL){
+          	 errorSemantico(2, $1.lexema, $1.nlin, $1.ncol);
+          }
+          if(s->tipo == FUNCLAS){
+             errorSemantico(ERRNOSIMPLE, $1.lexema, $1.nlin, $1.ncol);
+          }
+          else{
+               $$.cod = s->nomtrad;
+               $$.tipo = s->tipo;}
+        }
+        
+        | pari Expr pard {$$.cod = "(" + $2.cod + ")"; $$.tipo = $2.tipo;}
+;
+
+
+
+
+%%
+
+
+
+//***-------------------- en plp4.y -------------------------------
+/// ---------- Errores semánticos ---------------------------------
+
 
 
 
