@@ -42,6 +42,7 @@ TablaSimbolos* ts = new TablaSimbolos(NULL);
 
 
 int ctemp = 16000; // contador de direcciones temporales
+int memoria = 0;
 int nuevaTemp(void)
 {
     int t = ctemp;
@@ -74,7 +75,7 @@ Tipo    : tkint {$$.tipo = ENTERO;}
         | tkfloat {$$.tipo = REAL;}
 ;
 
-Bloque  : llavei {ts = new TablaSimbolos(ts);} BDecl SeqInstr llaved {ts = ts->getPadre();}
+Bloque  : llavei {ts = new TablaSimbolos(ts); $$.tipo = memoria;} BDecl SeqInstr llaved {ts = ts->getPadre(); memoria = $2.tipo;}
 ;
 
 BDecl   : BDecl Dvar {}
