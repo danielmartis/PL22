@@ -1,0 +1,13 @@
+global {
+ int i,j,b[3:5][4:10];
+}
+
+ int main()
+ {
+  i = 3;
+  j = 7;
+  b[i][j] = 755;
+
+  write(35+b[i][j]);  // debe salir 35+755 = 790
+
+ }
