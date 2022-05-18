@@ -7,6 +7,8 @@ typedef struct {
    int nlin,ncol;
    int tipo;
    string cod;
+   int dir;
+   int dbase;
 } MITIPO;
 
 #define YYSTYPE MITIPO

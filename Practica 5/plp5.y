@@ -18,6 +18,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include "TablaTipos.h"
 #include "TablaSimbolos.h"
 #include <stack>
 using namespace std;
@@ -39,7 +40,7 @@ int yyerror(char *s);
 string operador, s1, s2;  // string auxiliares
 stringstream ss;
 TablaSimbolos* ts = new TablaSimbolos(NULL);
-
+TablaTipos tt;
 
 int ctemp = 16000; // contador de direcciones temporales
 int memoria = 0;
@@ -122,14 +123,55 @@ Term    : Term mulop Factor {}
         | Factor {}
 ;
 
-Factor  : Ref {}
-        | nentero {}
-        | nreal {}
-        | pari Expr pard {}
+Factor  : Ref { if($1.tipo > REAL){
+                        errorSemantico(ERR_FALTAN, $1.nlin, $1.ncol, $1.lexema);
+                }
+                $$.dir = nuevaTemp();
+                ss.str("");
+                ss << $1.cod << "\n mov " << $1.dir << " A\n" << "addi #" << $1.dbase << "mov @A " << $$.dir;
+                $$.cod = ss.str();
+                $$.tipo = $1.tipo;
+                ss.str("");
+          }
+        | nentero {$$.dir = nuevaTemp();
+                   ss.str("");
+                   ss << "mov # " << $1.lexema << " " << $$.dir << "\n";
+                   $$.cod = ss.str();
+                   ss.str("");
+                   $$.tipo = ENTERO;}
+        | nreal {$$.dir = nuevaTemp();
+                 ss.str("");
+                 ss << "mov $ " << $1.lexema << " " << $$.dir << "\n";
+                 $$.cod = ss.str();
+                 ss.str("");
+                 $$.tipo = REAL;
+                 }
+        | pari Expr pard {
+                $$.cod = $2.cod;
+                $$.dir = $2.dir;
+                $$.tipo = $2.tipo;
+        }
 ;
 
-Ref     : id {}
-        | Ref cori Esimple cord {}
+Ref     : id {
+                if(ts->searchSymb($1.lexema) == NULL){
+                        errorSemantico(ERR_NODECL, $1.nlin, $1.ncol, $1.lexema);
+                }
+                else{
+                        $$.dir = nuevaTemp();
+                        Simbolo *s = ts->searchSymb($1.lexema);
+                        ss.str("");
+                        ss << "mov #0 " << $$.dir;
+                        $$.cod = ss.str();
+                        ss.str("");
+                        $$.tipo = s->tipo;
+                        $$.dbase = s->dir;
+
+                }
+        }
+        | Ref cori Esimple cord {
+
+        }
 ;
 
 %%
