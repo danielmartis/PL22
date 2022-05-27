@@ -54,9 +54,12 @@ mov A 16007
 mov 16007 A
 addi #2
 mov @A 16008
+
 mov 16000 A
 addi 16008
 mov A 16009
+
 wri 16009
 wrl
+
 halt

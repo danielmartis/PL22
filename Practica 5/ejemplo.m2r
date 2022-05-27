@@ -1,15 +1,15 @@
-mov #0 16000; acceso a array 'i' lin=7
+mov #0 16000
 mov #3 16001
 mov 16000 A
 addi #0
 mov 16001 @A
-mov #0 16000; acceso a array 'j' lin=8
+mov #0 16000
 mov #7 16001
 mov 16000 A
 addi #1
 mov 16001 @A
-mov #0 16000; acceso a array 'b' lin=9
-mov #0 16001; acceso a array 'i' lin=9
+mov #0 16000
+mov #0 16001
 mov 16001 A
 addi #0
 mov @A 16002
@@ -18,7 +18,7 @@ muli #3
 addi 16002
 subi #3
 mov A 16003
-mov #0 16004; acceso a array 'j' lin=9
+mov #0 16004
 mov 16004 A
 addi #1
 mov @A 16005
@@ -32,8 +32,8 @@ mov 16006 A
 addi #2
 mov 16007 @A
 mov #35 16000
-mov #0 16001; acceso a array 'b' lin=11
-mov #0 16002; acceso a array 'i' lin=11
+mov #0 16001
+mov #0 16002
 mov 16002 A
 addi #0
 mov @A 16003
@@ -42,7 +42,7 @@ muli #3
 addi 16003
 subi #3
 mov A 16004
-mov #0 16005; acceso a array 'j' lin=11
+mov #0 16005
 mov 16005 A
 addi #1
 mov @A 16006

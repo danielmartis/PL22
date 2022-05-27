@@ -115,6 +115,16 @@ Instr   : pyc {}
         | Ref assig Expr pyc {  // Faltan comprobaciones.
                                 ss.str("");
                                 ss << $1.cod << $3.cod;
+                                if($3.tipo == ENTERO && $1.tipo == REAL){
+                                        ss << "mov " << $3.dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << "mov A " << $3.dir << "\n"; 
+                                }
+                                else if($3.tipo == REAL && $1.tipo == ENTERO){
+                                        ss << "mov " << $3.dir << " A\n";
+                                        ss << "rtoi\n";
+                                        ss << "mov A " << $3.dir << "\n"; 
+                                }
                                 ss << "mov " << $1.dir << " A\n";
                                 ss << "addi #" << $1.dbase << "\n";
                                 ss << "mov " << $3.dir << " @A\n";
@@ -122,7 +132,13 @@ Instr   : pyc {}
                                 ss.str("");
                            }
         | tkwrite pari Expr pard pyc {ss.str("");
-                                      ss << $3.cod << "\nwri " << $3.dir << "\nwrl\n";
+                                      ss << $3.cod;
+                                      if($3.tipo == ENTERO){
+                                              ss << "\nwri " << $3.dir << "\nwrl\n";
+                                      }
+                                      else{
+                                              ss << "\nwrr " << $3.dir << "\nwrl\n";
+                                      }
                                       $$.cod = ss.str();
                                       ss.str("");}
         | tkread pari Ref pard pyc {}
@@ -138,21 +154,87 @@ Expr    : Expr relop Esimple {}
                    }
 ;
 
-Esimple : Esimple addop Term {//Falta arreglar
+Esimple : Esimple addop Term {//Falta comprobaciones
                                 $$.dir = nuevaTemp();
+                                string simb;
+                                if(*$2.lexema == '+'){
+                                        simb = "add";
+                                }
+                                else{
+                                        simb = "sub";
+                                }
                                 ss.str("");
-                                ss << $1.cod << $3.cod << "\nmov " << $1.dir << " A\naddi " << $3.dir;
-                                ss << "\nmov A " << $$.dir << "\n";
+                                ss << $1.cod << $3.cod << "\n";
+                                if($1.tipo == ENTERO && $3.tipo == REAL){
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = REAL;
+                                }
+                                else if($1.tipo == REAL && $3.tipo == ENTERO){
+                                        ss << "mov " << $3.dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << "mov A " << $3.dir << "\n";
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = REAL;
+                                }
+                                else if($1.tipo == REAL && $3.tipo == REAL){
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = REAL;
+                                }
+                                else{
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "i " << $3.dir << "\n";
+                                        $$.tipo = ENTERO;
+                                }
+                                ss << "mov A " << $$.dir << "\n";
                                 $$.cod = ss.str();
                                 ss.str("");
-                                $$.tipo = ENTERO; 
 }
         | Term {$$.cod = $1.cod;
                 $$.tipo = $1.tipo;
                 $$.dir = $1.dir;}
 ;
 
-Term    : Term mulop Factor {}
+Term    : Term mulop Factor {$$.dir = nuevaTemp();
+                                string simb;
+                                if(*$2.lexema == '*'){
+                                        simb = "mul";
+                                }
+                                else{
+                                        simb = "div";
+                                }
+                                ss.str("");
+                                ss << $1.cod << $3.cod << "\n";
+                                if($1.tipo == ENTERO && $3.tipo == REAL){
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = REAL;
+                                }
+                                else if($1.tipo == REAL && $3.tipo == ENTERO){
+                                        ss << "mov " << $3.dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << "mov A " << $3.dir << "\n";
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = REAL;
+                                }
+                                else if($1.tipo == REAL && $3.tipo == REAL){
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = REAL;
+                                }
+                                else{
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "i " << $3.dir << "\n";
+                                        $$.tipo = ENTERO;
+                                }
+                                ss << "mov A " << $$.dir << "\n";
+                                $$.cod = ss.str();
+                                ss.str("");}
         | Factor {$$.cod = $1.cod;
                   $$.tipo = $1.tipo;
                   $$.dir = $1.dir;}

@@ -560,13 +560,13 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int16 yyrline[] =
 {
        0,    57,    57,    72,    75,    76,    79,    79,    82,    83,
       86,    86,    89,    89,    90,    93,    93,   105,   105,   106,
-     109,   109,   110,   113,   114,   115,   124,   128,   129,   130,
-     131,   134,   135,   141,   150,   155,   156,   161,   171,   177,
-     184,   191,   207,   207
+     109,   109,   110,   113,   114,   115,   134,   144,   145,   146,
+     147,   150,   151,   157,   196,   201,   238,   243,   253,   259,
+     266,   273,   289,   289
 };
 #endif
 
@@ -1573,101 +1573,183 @@ yyreduce:
                              {  // Faltan comprobaciones.
                                 ss.str("");
                                 ss << yyvsp[-3].cod << yyvsp[-1].cod;
+                                if(yyvsp[-1].tipo == ENTERO && yyvsp[-3].tipo == REAL){
+                                        ss << "mov " << yyvsp[-1].dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << "mov A " << yyvsp[-1].dir << "\n"; 
+                                }
+                                else if(yyvsp[-1].tipo == REAL && yyvsp[-3].tipo == ENTERO){
+                                        ss << "mov " << yyvsp[-1].dir << " A\n";
+                                        ss << "rtoi\n";
+                                        ss << "mov A " << yyvsp[-1].dir << "\n"; 
+                                }
                                 ss << "mov " << yyvsp[-3].dir << " A\n";
                                 ss << "addi #" << yyvsp[-3].dbase << "\n";
                                 ss << "mov " << yyvsp[-1].dir << " @A\n";
                                 yyval.cod = ss.str();
                                 ss.str("");
                            }
-#line 1583 "plp5.tab.c"
+#line 1593 "plp5.tab.c"
     break;
 
   case 26:
-#line 124 "plp5.y"
+#line 134 "plp5.y"
                                      {ss.str("");
-                                      ss << yyvsp[-2].cod << "\nwri " << yyvsp[-2].dir << "\nwrl\n";
+                                      ss << yyvsp[-2].cod;
+                                      if(yyvsp[-2].tipo == ENTERO){
+                                              ss << "\nwri " << yyvsp[-2].dir << "\nwrl\n";
+                                      }
+                                      else{
+                                              ss << "\nwrr " << yyvsp[-2].dir << "\nwrl\n";
+                                      }
                                       yyval.cod = ss.str();
                                       ss.str("");}
-#line 1592 "plp5.tab.c"
+#line 1608 "plp5.tab.c"
     break;
 
   case 27:
-#line 128 "plp5.y"
+#line 144 "plp5.y"
                                    {}
-#line 1598 "plp5.tab.c"
+#line 1614 "plp5.tab.c"
     break;
 
   case 28:
-#line 129 "plp5.y"
+#line 145 "plp5.y"
                                     {}
-#line 1604 "plp5.tab.c"
+#line 1620 "plp5.tab.c"
     break;
 
   case 29:
-#line 130 "plp5.y"
+#line 146 "plp5.y"
                                                  {}
-#line 1610 "plp5.tab.c"
+#line 1626 "plp5.tab.c"
     break;
 
   case 30:
-#line 131 "plp5.y"
+#line 147 "plp5.y"
                                        {}
-#line 1616 "plp5.tab.c"
+#line 1632 "plp5.tab.c"
     break;
 
   case 31:
-#line 134 "plp5.y"
+#line 150 "plp5.y"
                              {}
-#line 1622 "plp5.tab.c"
+#line 1638 "plp5.tab.c"
     break;
 
   case 32:
-#line 135 "plp5.y"
+#line 151 "plp5.y"
                   {yyval.cod = yyvsp[0].cod;
                    yyval.tipo = yyvsp[0].tipo;
                    yyval.dir = yyvsp[0].dir;
                    }
-#line 1631 "plp5.tab.c"
+#line 1647 "plp5.tab.c"
     break;
 
   case 33:
-#line 141 "plp5.y"
-                             {//Falta arreglar
+#line 157 "plp5.y"
+                             {//Falta comprobaciones
                                 yyval.dir = nuevaTemp();
+                                string simb;
+                                if(*yyvsp[-1].lexema == '+'){
+                                        simb = "add";
+                                }
+                                else{
+                                        simb = "sub";
+                                }
                                 ss.str("");
-                                ss << yyvsp[-2].cod << yyvsp[0].cod << "\nmov " << yyvsp[-2].dir << " A\naddi " << yyvsp[0].dir;
-                                ss << "\nmov A " << yyval.dir << "\n";
+                                ss << yyvsp[-2].cod << yyvsp[0].cod << "\n";
+                                if(yyvsp[-2].tipo == ENTERO && yyvsp[0].tipo == REAL){
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << simb << "r " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = REAL;
+                                }
+                                else if(yyvsp[-2].tipo == REAL && yyvsp[0].tipo == ENTERO){
+                                        ss << "mov " << yyvsp[0].dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << "mov A " << yyvsp[0].dir << "\n";
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << simb << "r " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = REAL;
+                                }
+                                else if(yyvsp[-2].tipo == REAL && yyvsp[0].tipo == REAL){
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << simb << "r " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = REAL;
+                                }
+                                else{
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << simb << "i " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = ENTERO;
+                                }
+                                ss << "mov A " << yyval.dir << "\n";
                                 yyval.cod = ss.str();
                                 ss.str("");
-                                yyval.tipo = ENTERO; 
 }
-#line 1645 "plp5.tab.c"
+#line 1691 "plp5.tab.c"
     break;
 
   case 34:
-#line 150 "plp5.y"
+#line 196 "plp5.y"
                {yyval.cod = yyvsp[0].cod;
                 yyval.tipo = yyvsp[0].tipo;
                 yyval.dir = yyvsp[0].dir;}
-#line 1653 "plp5.tab.c"
+#line 1699 "plp5.tab.c"
     break;
 
   case 35:
-#line 155 "plp5.y"
-                            {}
-#line 1659 "plp5.tab.c"
+#line 201 "plp5.y"
+                            {yyval.dir = nuevaTemp();
+                                string simb;
+                                if(*yyvsp[-1].lexema == '*'){
+                                        simb = "mul";
+                                }
+                                else{
+                                        simb = "div";
+                                }
+                                ss.str("");
+                                ss << yyvsp[-2].cod << yyvsp[0].cod << "\n";
+                                if(yyvsp[-2].tipo == ENTERO && yyvsp[0].tipo == REAL){
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << simb << "r " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = REAL;
+                                }
+                                else if(yyvsp[-2].tipo == REAL && yyvsp[0].tipo == ENTERO){
+                                        ss << "mov " << yyvsp[0].dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << "mov A " << yyvsp[0].dir << "\n";
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << simb << "r " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = REAL;
+                                }
+                                else if(yyvsp[-2].tipo == REAL && yyvsp[0].tipo == REAL){
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << simb << "r " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = REAL;
+                                }
+                                else{
+                                        ss << "mov " << yyvsp[-2].dir << " A\n";
+                                        ss << simb << "i " << yyvsp[0].dir << "\n";
+                                        yyval.tipo = ENTERO;
+                                }
+                                ss << "mov A " << yyval.dir << "\n";
+                                yyval.cod = ss.str();
+                                ss.str("");}
+#line 1741 "plp5.tab.c"
     break;
 
   case 36:
-#line 156 "plp5.y"
+#line 238 "plp5.y"
                  {yyval.cod = yyvsp[0].cod;
                   yyval.tipo = yyvsp[0].tipo;
                   yyval.dir = yyvsp[0].dir;}
-#line 1667 "plp5.tab.c"
+#line 1749 "plp5.tab.c"
     break;
 
   case 37:
-#line 161 "plp5.y"
+#line 243 "plp5.y"
               { if(yyvsp[0].tipo > REAL){
                         errorSemantico(ERR_FALTAN, yyvsp[0].nlin, yyvsp[0].ncol, yyvsp[0].lexema);
                 }
@@ -1678,22 +1760,22 @@ yyreduce:
                 yyval.tipo = yyvsp[0].tipo;
                 ss.str("");
           }
-#line 1682 "plp5.tab.c"
+#line 1764 "plp5.tab.c"
     break;
 
   case 38:
-#line 171 "plp5.y"
+#line 253 "plp5.y"
                   {yyval.dir = nuevaTemp();
                    ss.str("");
                    ss << "mov #" << yyvsp[0].lexema << " " << yyval.dir << "\n";
                    yyval.cod = ss.str();
                    ss.str("");
                    yyval.tipo = ENTERO;}
-#line 1693 "plp5.tab.c"
+#line 1775 "plp5.tab.c"
     break;
 
   case 39:
-#line 177 "plp5.y"
+#line 259 "plp5.y"
                 {yyval.dir = nuevaTemp();
                  ss.str("");
                  ss << "mov $" << yyvsp[0].lexema << " " << yyval.dir << "\n";
@@ -1701,21 +1783,21 @@ yyreduce:
                  ss.str("");
                  yyval.tipo = REAL;
                  }
-#line 1705 "plp5.tab.c"
+#line 1787 "plp5.tab.c"
     break;
 
   case 40:
-#line 184 "plp5.y"
+#line 266 "plp5.y"
                          {
                 yyval.cod = yyvsp[-1].cod;
                 yyval.dir = yyvsp[-1].dir;
                 yyval.tipo = yyvsp[-1].tipo;
         }
-#line 1715 "plp5.tab.c"
+#line 1797 "plp5.tab.c"
     break;
 
   case 41:
-#line 191 "plp5.y"
+#line 273 "plp5.y"
              {
                 if(ts->searchSymb(yyvsp[0].lexema) == NULL){
                         errorSemantico(ERR_NODECL, yyvsp[0].nlin, yyvsp[0].ncol, yyvsp[0].lexema);
@@ -1732,17 +1814,17 @@ yyreduce:
 
                 }
         }
-#line 1736 "plp5.tab.c"
+#line 1818 "plp5.tab.c"
     break;
 
   case 42:
-#line 207 "plp5.y"
+#line 289 "plp5.y"
                    {if(yyvsp[-1].tipo <= REAL){ errorSemantico(ERR_SOBRAN,yyvsp[-1].nlin,yyvsp[-1].ncol, yyvsp[-1].lexema);}}
-#line 1742 "plp5.tab.c"
+#line 1824 "plp5.tab.c"
     break;
 
   case 43:
-#line 208 "plp5.y"
+#line 290 "plp5.y"
                        { if(yyvsp[-1].tipo != ENTERO){
                                 errorSemantico(ERR_INDICE_ENTERO, yyvsp[-1].nlin, yyvsp[-1].ncol, yyvsp[-1].lexema);
                          }
@@ -1762,11 +1844,11 @@ yyreduce:
 
 
         }
-#line 1766 "plp5.tab.c"
+#line 1848 "plp5.tab.c"
     break;
 
 
-#line 1770 "plp5.tab.c"
+#line 1852 "plp5.tab.c"
 
       default: break;
     }
@@ -1998,7 +2080,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 229 "plp5.y"
+#line 311 "plp5.y"
 
 
 
