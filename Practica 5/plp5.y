@@ -40,7 +40,7 @@ int yyerror(char *s);
 string operador, s1, s2;  // string auxiliares
 stringstream ss;
 TablaSimbolos* ts = new TablaSimbolos(NULL);
-TablaTipos tt;
+TablaTipos* tt = new TablaTipos();
 
 int ctemp = 16000; // contador de direcciones temporales
 int memoria = 0;
@@ -69,42 +69,62 @@ S   : global llavei BDecl llaved Funciones {
 }
 ;
 
-Funciones   : tkint tkmain pari pard Bloque {}
+Funciones   : tkint tkmain pari pard Bloque {$$.cod = $5.cod;}
 ;
 
 Tipo    : tkint {$$.tipo = ENTERO;}
         | tkfloat {$$.tipo = REAL;}
 ;
 
-Bloque  : llavei {ts = new TablaSimbolos(ts); $$.tipo = memoria;} BDecl SeqInstr llaved {ts = ts->getPadre(); memoria = $2.tipo;}
+Bloque  : llavei {ts = new TablaSimbolos(ts); $$.tipo = memoria;} BDecl SeqInstr llaved {ts = ts->getPadre(); memoria = $2.tipo; $$.cod = $4.cod; }
 ;
 
-BDecl   : BDecl Dvar {}
-        | {}
+BDecl   : BDecl Dvar {$$.cod = "";}
+        | {$$.cod = "";}
 ;
 
-Dvar    : Tipo LIdent pyc {}
+Dvar    : Tipo {$$.tipo = $1.tipo;} LIdent pyc {}
 ;
 
-LIdent  : LIdent coma Variable {}
+LIdent  : LIdent coma {$$.tipo = $0.tipo;} Variable {}
         | Variable {}
 ;
 
-Variable : id V {}
+Variable : id {$$.tipo = $0.tipo;} V {Simbolo s;
+                                      s.dir = memoria;
+                                      s.tam = $3.tam;
+                                      s.tipo = $3.tipo;
+                                      s.nombre = $1.lexema;
+                                      memoria = memoria + $3.tam;
+                                      if(!ts->newSymb(s)){
+                                        errorSemantico(ERR_YADECL, $1.nlin, $1.ncol, $1.lexema);
+                                      }
+                                      }
 ;
 
-V       : cori nentero dosp nentero cord V {}
-        | {}
+V       : cori nentero dosp nentero cord {$$.tipo = $0.tipo;} V {tt->nuevoTipoArray(atoi($2.lexema), atoi($4.lexema),$7.tipo); $$.tam = $7.tam * (atoi($2.lexema) * atoi($4.lexema) - 1); $$.tipo = tt->tipos.size() -1;} 
+        | {$$.tipo = $0.tipo; $$.tam = 1;}
 ;
 
-SeqInstr : SeqInstr {ctemp = 16000;} Instr {}
-         | {}
+SeqInstr : SeqInstr {ctemp = 16000;} Instr {$$.cod = $1.cod + $3.cod;}
+         | {$$.cod = "";}
 ;
 
 Instr   : pyc {}
         | Bloque {}
-        | Ref assig Expr pyc {}
-        | tkwrite pari Expr pard pyc {}
+        | Ref assig Expr pyc {  // Faltan comprobaciones.
+                                ss.str("");
+                                ss << $1.cod << $3.cod;
+                                ss << "mov " << $1.dir << " A\n";
+                                ss << "addi #" << $1.dbase << "\n";
+                                ss << "mov " << $3.dir << " @A\n";
+                                $$.cod = ss.str();
+                                ss.str("");
+                           }
+        | tkwrite pari Expr pard pyc {ss.str("");
+                                      ss << $3.cod << "\nwri " << $3.dir << "\nwrl\n";
+                                      $$.cod = ss.str();
+                                      ss.str("");}
         | tkread pari Ref pard pyc {}
         | tkif pari Expr pard Instr {}
         | tkif pari Expr pard Instr tkelse Instr {}
@@ -112,15 +132,30 @@ Instr   : pyc {}
 ;
 
 Expr    : Expr relop Esimple {}
-        | Esimple {}
+        | Esimple {$$.cod = $1.cod;
+                   $$.tipo = $1.tipo;
+                   $$.dir = $1.dir;
+                   }
 ;
 
-Esimple : Esimple addop Term {}
-        | Term {}
+Esimple : Esimple addop Term {//Falta arreglar
+                                $$.dir = nuevaTemp();
+                                ss.str("");
+                                ss << $1.cod << $3.cod << "\nmov " << $1.dir << " A\naddi " << $3.dir;
+                                ss << "\nmov A " << $$.dir << "\n";
+                                $$.cod = ss.str();
+                                ss.str("");
+                                $$.tipo = ENTERO; 
+}
+        | Term {$$.cod = $1.cod;
+                $$.tipo = $1.tipo;
+                $$.dir = $1.dir;}
 ;
 
 Term    : Term mulop Factor {}
-        | Factor {}
+        | Factor {$$.cod = $1.cod;
+                  $$.tipo = $1.tipo;
+                  $$.dir = $1.dir;}
 ;
 
 Factor  : Ref { if($1.tipo > REAL){
@@ -128,20 +163,20 @@ Factor  : Ref { if($1.tipo > REAL){
                 }
                 $$.dir = nuevaTemp();
                 ss.str("");
-                ss << $1.cod << "\n mov " << $1.dir << " A\n" << "addi #" << $1.dbase << "mov @A " << $$.dir;
+                ss << $1.cod << "mov " << $1.dir << " A\n" << "addi #" << $1.dbase << "\nmov @A " << $$.dir << "\n";
                 $$.cod = ss.str();
                 $$.tipo = $1.tipo;
                 ss.str("");
           }
         | nentero {$$.dir = nuevaTemp();
                    ss.str("");
-                   ss << "mov # " << $1.lexema << " " << $$.dir << "\n";
+                   ss << "mov #" << $1.lexema << " " << $$.dir << "\n";
                    $$.cod = ss.str();
                    ss.str("");
                    $$.tipo = ENTERO;}
         | nreal {$$.dir = nuevaTemp();
                  ss.str("");
-                 ss << "mov $ " << $1.lexema << " " << $$.dir << "\n";
+                 ss << "mov $" << $1.lexema << " " << $$.dir << "\n";
                  $$.cod = ss.str();
                  ss.str("");
                  $$.tipo = REAL;
@@ -161,7 +196,7 @@ Ref     : id {
                         $$.dir = nuevaTemp();
                         Simbolo *s = ts->searchSymb($1.lexema);
                         ss.str("");
-                        ss << "mov #0 " << $$.dir;
+                        ss << "mov #0 " << $$.dir << "\n";
                         $$.cod = ss.str();
                         ss.str("");
                         $$.tipo = s->tipo;
@@ -169,9 +204,26 @@ Ref     : id {
 
                 }
         }
-        | Ref cori Esimple cord {
+        | Ref cori {if($1.tipo <= REAL){ errorSemantico(ERR_SOBRAN,$1.nlin,$1.ncol, $1.lexema);}} 
+          Esimple cord { if($4.tipo != ENTERO){
+                                errorSemantico(ERR_INDICE_ENTERO, $4.nlin, $4.ncol, $4.lexema);
+                         }
+                         else{
+                                 $$.dir = nuevaTemp();
+                                 $$.dbase = $1.dbase;
+                                 $$.tipo = tt->tipos[$1.tipo].tipoBase;
+                                 ss.str("");
+                                 ss << $1.cod << $4.cod << "mov " << $1.dir << " A\n";
+                                 ss << "muli #" << tt->tipos[$1.tipo].limiteSuperior - tt->tipos[$1.tipo].limiteInferior + 1;
+                                 ss << "\naddi " << $4.dir;
+                                 ss << "\nsubi #" << tt->tipos[$1.tipo].limiteInferior;
+                                 ss << "\nmov A " << $$.dir << "\n";
+                                 $$.cod = ss.str();
+                                 ss.str("");
+                         }
 
-        }
+
+        } 
 ;
 
 %%

@@ -1,0 +1,9 @@
+global {
+ int i,j,b[3:5][4:10];
+}
+
+ int main()
+ {
+  i = 3;
+
+ }
