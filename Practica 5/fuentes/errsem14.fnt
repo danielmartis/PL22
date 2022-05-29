@@ -1,0 +1,10 @@
+global {
+
+  float a[5:10][2:5][0:2];
+
+}
+
+  int main()
+  {
+    a[6][3][10.0/10] = 7;  // ERR_INDICE_ENTERO (9,12)
+  }

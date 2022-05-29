@@ -44,10 +44,21 @@ TablaTipos* tt = new TablaTipos();
 
 int ctemp = 16000; // contador de direcciones temporales
 int memoria = 0;
+int etiqueta = 0;
 int nuevaTemp(void)
 {
+    if(ctemp == 16384){
+            errorSemantico(ERR_MAXTEMP, 0,0,"");
+    }
     int t = ctemp;
     ctemp ++;
+    return t;
+}
+
+int nuevaEtiqueta(void)
+{
+    int t = etiqueta;
+    etiqueta++;
     return t;
 }
 
@@ -61,7 +72,7 @@ S   : global llavei BDecl llaved Funciones {
         }
         else{
             ss.str("");
-            ss << $5.cod << "\nhalt";
+            ss << $5.cod << "halt";
             $$.cod = ss.str();
             ss.str("");
             cout << $$.cod;
@@ -83,11 +94,11 @@ BDecl   : BDecl Dvar {$$.cod = "";}
         | {$$.cod = "";}
 ;
 
-Dvar    : Tipo {$$.tipo = $1.tipo;} LIdent pyc {}
+Dvar    : Tipo {$$.tipo = $1.tipo;} LIdent pyc {$$.cod = "";}
 ;
 
-LIdent  : LIdent coma {$$.tipo = $0.tipo;} Variable {}
-        | Variable {}
+LIdent  : LIdent coma {$$.tipo = $0.tipo;} Variable {$$.cod = "";}
+        | Variable {$$.cod = "";}
 ;
 
 Variable : id {$$.tipo = $0.tipo;} V {Simbolo s;
@@ -99,10 +110,20 @@ Variable : id {$$.tipo = $0.tipo;} V {Simbolo s;
                                       if(!ts->newSymb(s)){
                                         errorSemantico(ERR_YADECL, $1.nlin, $1.ncol, $1.lexema);
                                       }
+                                      if(memoria>=16000){
+                                         errorSemantico(ERR_NOCABE, $1.nlin, $1.ncol, $1.lexema);
                                       }
+                                }
 ;
 
-V       : cori nentero dosp nentero cord {$$.tipo = $0.tipo;} V {tt->nuevoTipoArray(atoi($2.lexema), atoi($4.lexema),$7.tipo); $$.tam = $7.tam * (atoi($2.lexema) * atoi($4.lexema) - 1); $$.tipo = tt->tipos.size() -1;} 
+V       : cori nentero dosp nentero cord {int n1, n2;
+                                          n1 = atoi($2.lexema);
+                                          n2 = atoi($4.lexema);
+                                          if(n2 < n1){
+                                                  errorSemantico(ERR_DIM, $4.nlin, $4.ncol, $4.lexema);
+                                          } 
+                                          $$.tipo = $0.tipo;} 
+                                          V {tt->nuevoTipoArray(atoi($2.lexema), atoi($4.lexema),$7.tipo); $$.tam = $7.tam * (atoi($4.lexema) - atoi($2.lexema) + 1); $$.tipo = tt->tipos.size() -1;} 
         | {$$.tipo = $0.tipo; $$.tam = 1;}
 ;
 
@@ -110,11 +131,14 @@ SeqInstr : SeqInstr {ctemp = 16000;} Instr {$$.cod = $1.cod + $3.cod;}
          | {$$.cod = "";}
 ;
 
-Instr   : pyc {}
-        | Bloque {}
+Instr   : pyc {$$.cod = "";}
+        | Bloque {$$.cod = $1.cod;}
         | Ref assig Expr pyc {  // Faltan comprobaciones.
                                 ss.str("");
                                 ss << $1.cod << $3.cod;
+                                if($1.tipo > REAL){
+                                        errorSemantico(ERR_FALTAN, $1.nlin, $1.ncol, $1.lexema);
+                                }
                                 if($3.tipo == ENTERO && $1.tipo == REAL){
                                         ss << "mov " << $3.dir << " A\n";
                                         ss << "itor\n";
@@ -134,20 +158,125 @@ Instr   : pyc {}
         | tkwrite pari Expr pard pyc {ss.str("");
                                       ss << $3.cod;
                                       if($3.tipo == ENTERO){
-                                              ss << "\nwri " << $3.dir << "\nwrl\n";
+                                              ss << "wri " << $3.dir << "\nwrl\n";
                                       }
                                       else{
-                                              ss << "\nwrr " << $3.dir << "\nwrl\n";
+                                              ss << "wrr " << $3.dir << "\nwrl\n";
                                       }
                                       $$.cod = ss.str();
                                       ss.str("");}
-        | tkread pari Ref pard pyc {}
-        | tkif pari Expr pard Instr {}
-        | tkif pari Expr pard Instr tkelse Instr {}
-        | tkwhile pari Expr pard Instr {}
+        | tkread pari Ref pard pyc {
+                                        ss.str("");
+                                        ss << $3.cod;
+                                        if($3.tipo > REAL){
+                                                errorSemantico(ERR_FALTAN, $3.nlin, $3.ncol, $3.lexema);
+                                        }       
+                                        ss << "mov " << $3.dir << " A\n";
+                                        ss << "addi #" << $3.dbase << "\n";
+                                        if($3.tipo == ENTERO){
+                                                ss << "rdi @A\n";
+                                        }
+                                        else{
+                                                ss << "rdr @A\n";
+                                        }
+                                        $$.cod = ss.str();
+                                        ss.str("");
+        }
+        | tkif pari Expr pard Instr {int eti = nuevaEtiqueta();
+                                     ss.str("");
+                                     ss << $3.cod;
+                                     ss << "mov " << $3.dir << " A\n";
+                                     ss << "jz L" << eti << "\n";
+                                     ss << $5.cod;
+                                     ss << "L" << eti << "\n";
+                                     $$.cod = ss.str();
+                                     ss.str("");}
+        | tkif pari Expr pard Instr tkelse Instr {int eti1, eti2;
+                                                  eti1 = nuevaEtiqueta();
+                                                  eti2 = nuevaEtiqueta();
+                                                  ss.str("");
+                                                  ss << $3.cod;
+                                                  ss << "mov " << $3.dir << " A\n";
+                                                  ss << "jz L" << eti1 << "\n";
+                                                  ss << $5.cod;
+                                                  ss << "jmp L" << eti2 << "\n";
+                                                  ss << "L" << eti1 << "\n" << $7.cod;
+                                                  ss << "L" << eti2 << "\n";
+                                                  $$.cod = ss.str();
+                                                  ss.str("");}
+        | tkwhile pari Expr pard Instr {int eti1, eti2;
+                                        eti1 = nuevaEtiqueta();
+                                        eti2 = nuevaEtiqueta();
+                                        ss.str("");
+                                        ss << "L" << eti1 << "\n";
+                                        ss << $3.cod;
+                                        ss << "mov " << $3.dir << " A\n";
+                                        ss << "jz L" << eti2 << "\n";
+                                        ss << $5.cod;
+                                        ss << "jmp L" << eti1 << "\n";
+                                        ss << "L" << eti2 << "\n";
+                                        $$.cod = ss.str();
+                                        ss.str("");
+                                        }
 ;
 
-Expr    : Expr relop Esimple {}
+Expr    : Expr relop Esimple {// Tienen que ser los dos enteros o los dos reales, no se puede comparar con ==, usar strlen
+                                $$.dir = nuevaTemp();
+                                string simb;
+                                if(strlen($2.lexema) == 2){
+                                        // <=, >=, !=, ==
+                                        if($2.lexema[0] == '<'){
+                                                simb = "leq";
+                                        }
+                                        else if($2.lexema[0] == '>'){
+                                                simb = "geq";
+                                        }
+                                        else if($2.lexema[0] == '!'){
+                                                simb = "neq";
+                                        }
+                                        else if($2.lexema[0] == '='){
+                                                simb = "eql";
+                                        }
+                                }
+                                else{
+                                        // <, >
+                                        if($2.lexema[0] == '<'){
+                                                simb = "lss";
+                                        }
+                                        else if($2.lexema[0] == '>'){
+                                                simb = "gtr";
+                                        }
+                                }
+                                ss.str("");
+                                ss << $1.cod << $3.cod;
+                                if($1.tipo == ENTERO && $3.tipo == REAL){
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = ENTERO;
+                                }
+                                else if($1.tipo == REAL && $3.tipo == ENTERO){
+                                        ss << "mov " << $3.dir << " A\n";
+                                        ss << "itor\n";
+                                        ss << "mov A " << $3.dir << "\n";
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = ENTERO;
+                                }
+                                else if($1.tipo == REAL && $3.tipo == REAL){
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "r " << $3.dir << "\n";
+                                        $$.tipo = ENTERO;
+                                }
+                                else{
+                                        ss << "mov " << $1.dir << " A\n";
+                                        ss << simb << "i " << $3.dir << "\n";
+                                        $$.tipo = ENTERO;
+                                }
+                                ss << "mov A " << $$.dir << "\n";
+                                $$.cod = ss.str();
+                                ss.str("");
+}
         | Esimple {$$.cod = $1.cod;
                    $$.tipo = $1.tipo;
                    $$.dir = $1.dir;
@@ -164,7 +293,7 @@ Esimple : Esimple addop Term {//Falta comprobaciones
                                         simb = "sub";
                                 }
                                 ss.str("");
-                                ss << $1.cod << $3.cod << "\n";
+                                ss << $1.cod << $3.cod;
                                 if($1.tipo == ENTERO && $3.tipo == REAL){
                                         ss << "mov " << $1.dir << " A\n";
                                         ss << "itor\n";
@@ -286,9 +415,9 @@ Ref     : id {
 
                 }
         }
-        | Ref cori {if($1.tipo <= REAL){ errorSemantico(ERR_SOBRAN,$1.nlin,$1.ncol, $1.lexema);}} 
+        | Ref cori {if($1.tipo <= REAL){ errorSemantico(ERR_SOBRAN,$2.nlin,$2.ncol, $1.lexema);}} 
           Esimple cord { if($4.tipo != ENTERO){
-                                errorSemantico(ERR_INDICE_ENTERO, $4.nlin, $4.ncol, $4.lexema);
+                                errorSemantico(ERR_INDICE_ENTERO, $2.nlin, $2.ncol, $2.lexema);
                          }
                          else{
                                  $$.dir = nuevaTemp();
@@ -301,6 +430,8 @@ Ref     : id {
                                  ss << "\nsubi #" << tt->tipos[$1.tipo].limiteInferior;
                                  ss << "\nmov A " << $$.dir << "\n";
                                  $$.cod = ss.str();
+                                 $$.nlin = $5.nlin;
+                                 $$.ncol = $5.ncol;
                                  ss.str("");
                          }
 

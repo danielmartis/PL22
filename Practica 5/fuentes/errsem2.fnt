@@ -1,0 +1,11 @@
+global {
+  int i,j,k;
+  int a[1:100][1:200][1:300];  // ERR_NOCABE (3,7)
+}
+
+  int main() 
+  {
+    i=8;
+    j=9;
+    write(j);
+  }

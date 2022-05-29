@@ -1,0 +1,32 @@
+Autocorrector de la práctica 5 de PL, curso 2021-22
+=====================================================
+
+Instrucciones de uso:
+
+1) Copia los ficheros plp5.l, plp5.y y demás
+ficheros fuente (incluyendo el Makefile) en el 
+directorio (o carpeta) en el que está este fichero LEEME
+
+
+2) Ejecuta el autocorrector:
+
+ ./autocorrector-plp5.sh
+
+ Si la salida es muy larga, es mejor dirigirla a un fichero:
+
+ ./autocorrector-plp5.sh > salida-autocorrector
+
+
+
+ El autocorrector ejecuta la práctica con programas fuentes incorrectos y
+correctos; con estos últimos, guarda la salida en un archivo, y ejecuta el
+intérprete de m2r con ese archivo, y lo que se compara es la salida del
+intérprete con la salida esperada.
+
+AVISO: como en otras prácticas, el autocorrector no prueba todos los casos 
+posibles, por lo que debes hacer más pruebas aparte de las incluídas en este
+autocorrector. Puesto que, si alguien no aprueba la parte práctica en la
+convocatoria de junio, debe presentar esta práctica para la convocatoria de 
+julio, no se publicará el corrector final usado en la corrección, pero podrás
+consultar tus fallos con el profesor mediante tutorías.
+

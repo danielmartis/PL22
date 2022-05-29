@@ -1,0 +1,10 @@
+global {
+  int a,b,C;
+}
+
+  int main() {
+
+    a = 7;
+    c = a;     // ERR_NODECL (8,5)   ('c' no se ha declarado, 'C' sí)
+    write(c);
+  }

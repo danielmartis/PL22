@@ -4,10 +4,6 @@ global {
 
  int main()
  {
-  i = 3;
-  j = 7;
-  b[i][j] = 755;
-
-  write(35+b[i][j]);  // debe salir 35+755 = 790
-
+  read(b[3][7]);
+  write(b[3][7]);
  }

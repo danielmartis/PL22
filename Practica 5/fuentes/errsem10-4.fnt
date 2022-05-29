@@ -1,0 +1,7 @@
+global {}
+  int main()
+  {
+    float f,g[1:10][2:4];
+  
+    g[7][2][1] = 2.5;  // ERR_SOBRAN (6,12)
+  }
